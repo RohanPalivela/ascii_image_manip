@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/color"
 	"image/jpeg"
+	"image/png"
 	"log"
 	"os"
 )
@@ -51,7 +52,7 @@ func main() {
 
 	arr := make([][]Pixel, height)
 
-	for y := 0; y < height; y++ {
+	for y := range height {
 		arr[y] = make([]Pixel, width)
 	}
 
@@ -75,28 +76,68 @@ func main() {
 			// fmt.Printf("Pixel: (%v, %v, %v, %v)\n", cur.red, cur.blue, cur.green, cur.alpha)
 
 			// fmt.Printf("Pixel shifted: (%v, %v, %v, %v)\n\n", cur.red>>8, cur.blue>>8, cur.green>>8, cur.alpha>>8)
-			pixe := color.RGBA{
-				uint8(cur.red >> 8),
-				uint8(cur.blue >> 8),
-				uint8(cur.green >> 8),
-				uint8(cur.alpha >> 8),
-			}
-
+			pixe := PixelManip(&cur)
 			newimg.Set(cur.x, cur.y, pixe)
 		}
 	}
 
-	f, err := os.Create("output.jpeg")
+	filename := "output"
+
+	endProd, err := CreateJPEG(filename, newimg, 100)
+
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Issue creating file: " + err.Error())
 	}
+
+	fmt.Printf("Created new image %v", endProd)
+}
+
+func PixelManip(p *Pixel) color.RGBA {
+	return color.RGBA{
+		// R: uint8(p.red >> 8),
+		R: uint8(0),
+		G: uint8(p.blue >> 8),
+		B: uint8(p.green >> 8),
+		A: uint8(p.alpha >> 8),
+	}
+}
+
+func CreatePNG(filename string, newimg image.Image) (output string, err error) {
+	name := filename + ".png"
+
+	f, err := os.Create(name)
+
+	if err != nil {
+		return "", err
+	}
+
 	defer f.Close()
 
-	err = jpeg.Encode(f, newimg, &jpeg.Options{Quality: 100})
+	err = png.Encode(f, newimg)
 
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
-	fmt.Println("Created new image")
+	return name, nil
+}
+
+func CreateJPEG(filename string, newimg image.Image, quality int) (output string, err error) {
+	name := filename + ".jpeg"
+
+	f, err := os.Create(name)
+
+	if err != nil {
+		return "", err
+	}
+
+	defer f.Close()
+
+	err = jpeg.Encode(f, newimg, &jpeg.Options{Quality: quality})
+
+	if err != nil {
+		return "", err
+	}
+
+	return name, nil
 }
