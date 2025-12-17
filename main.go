@@ -12,10 +12,10 @@ import (
 )
 
 type Pixel struct {
-	red   uint32
-	blue  uint32
-	green uint32
-	alpha uint32
+	red   uint8
+	blue  uint8
+	green uint8
+	alpha uint8
 	x     int
 	y     int
 }
@@ -57,7 +57,15 @@ func main() {
 			r, g, b, a := img.At(x, y).RGBA()
 
 			// fmt.Printf("Pixel: (%v, %v, %v, %v)\n", r, g, b, a)
-			arr[count/width][count%width] = Pixel{r, g, b, a, x, y}
+			arr[count/width][count%width] =
+				Pixel{
+					red:   uint8(r >> 8),
+					green: uint8(g >> 8),
+					blue:  uint8(b >> 8),
+					alpha: uint8(a >> 8),
+					x:     x,
+					y:     y,
+				}
 			count++
 		}
 	}
@@ -107,8 +115,9 @@ func main() {
 
 func LuminFilter(p *Pixel, mapping map[int]rune) rune {
 
-	luminance := float64(0.2126*float64(p.red>>8)+0.7152*(float64(p.green>>8))+0.0722*float64(p.blue>>8)) / 255
-	lumBuckets := min(int(luminance*10), 9)
+	luminance := float64(0.2126*float64(p.red)+0.7152*(float64(p.green))+0.0722*float64(p.blue)) / 255 // Luminance from 0-255
+
+	lumBuckets := min(int(luminance*10), 9) // push into buckets of 0-9 (mapping)
 
 	return mapping[lumBuckets]
 }
@@ -141,7 +150,7 @@ func Normalize(p *Pixel) color.RGBA {
 		R: normalized,
 		G: normalized,
 		B: normalized,
-		A: normalized,
+		A: uint8(p.alpha >> 8),
 	}
 }
 
