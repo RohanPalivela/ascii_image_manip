@@ -8,6 +8,7 @@ import (
 	"image/png"
 	"log"
 	"os"
+	"strings"
 )
 
 type Pixel struct {
@@ -20,7 +21,100 @@ type Pixel struct {
 }
 
 func main() {
-	img, err := os.Open("wolf.jpeg")
+	img, bounds := OpenJPEGIMG("wolf.jpeg")
+
+	width := bounds.Dx()
+	height := bounds.Dy()
+
+	fmt.Printf("Dimensions: %v x %v\n", width, height)
+
+	arr := make([][]Pixel, height)
+
+	// luminescence to ascii mapping
+	mapping := map[int]rune{
+		0: ' ',
+		1: '.',
+		2: ':',
+		3: 'c',
+		4: 'o',
+		5: 'C',
+		6: 'O',
+		7: '0',
+		8: '@',
+		9: '■',
+	}
+
+	mapping[1] = 'd'
+
+	for y := range height {
+		arr[y] = make([]Pixel, width)
+	}
+
+	count := 0
+
+	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
+		for x := bounds.Min.X; x < bounds.Max.X; x++ {
+			r, g, b, a := img.At(x, y).RGBA()
+
+			// fmt.Printf("Pixel: (%v, %v, %v, %v)\n", r, g, b, a)
+			arr[count/width][count%width] = Pixel{r, g, b, a, x, y}
+			count++
+		}
+	}
+
+	// IMAGE CREATION CODE
+	// newimg1 := image.NewRGBA(image.Rect(bounds.Min.X, bounds.Min.X, bounds.Max.X, bounds.Max.Y))
+
+	// for i := 0; i < len(arr); i++ {
+	// 	for j := 0; j < len(arr[i]); j++ {
+	// 		cur := arr[i][j]
+	// 		pixe := Normalize(&cur)
+	// 		sb.WriteRune(LuminFilter(&cur))
+	// 		newimg1.Set(cur.x, cur.y, pixe)
+	// 	}
+	// 	fmt.Printf("\n")
+	// }
+
+	// endProd, err := CreateJPEG("output1", newimg1, 100)
+
+	// if err != nil {
+	// 	log.Fatal("Issue creating file: " + err.Error())
+	// }
+
+	// fmt.Printf("Created new image %v\n", endProd)
+	var sb strings.Builder
+
+	for i := range height {
+		for j := range width {
+			cur := arr[i][j]
+			sb.WriteRune(LuminFilter(&cur, mapping))
+		}
+		sb.WriteString("\n")
+	}
+
+	file, err := os.Create("output.txt")
+
+	if err != nil {
+		log.Fatal("Couldn't create output file " + err.Error())
+	}
+
+	defer file.Close()
+
+	file.WriteString(sb.String())
+
+	fmt.Println("Created new image")
+}
+
+func LuminFilter(p *Pixel, mapping map[int]rune) rune {
+
+	luminance := float64(0.2126*float64(p.red>>8)+0.7152*(float64(p.green>>8))+0.0722*float64(p.blue>>8)) / 255
+	lumBuckets := min(int(luminance*10), 9)
+
+	return mapping[lumBuckets]
+}
+
+func OpenJPEGIMG(filename string) (image image.Image, bounding image.Rectangle) {
+	img, err := os.Open(filename)
 
 	if err != nil {
 		log.Fatal("Error opening file: " + err.Error())
@@ -36,69 +130,18 @@ func main() {
 		log.Fatal("Could not decode image: " + err.Error())
 	}
 
-	// code for like something idk
-	// reader := base64.NewDecoder(base64.StdEncoding, strings.NewReader(data))
-	// m, _, err := image.Decode(reader)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
 	bounds := m.Bounds()
 
-	width := bounds.Dx()
-	height := bounds.Dy()
-
-	fmt.Printf("Dimensions: %v x %v\n", width, height)
-
-	arr := make([][]Pixel, height)
-
-	for y := range height {
-		arr[y] = make([]Pixel, width)
-	}
-
-	count := 0
-	for x := bounds.Min.X; x < bounds.Max.X; x++ {
-		for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
-			r, g, b, a := m.At(x, y).RGBA()
-
-			// fmt.Printf("Pixel: (%v, %v, %v, %v)\n", r, g, b, a)
-			arr[count/height][count%height] = Pixel{r, g, b, a, x, y}
-			count++
-		}
-	}
-
-	newimg := image.NewRGBA(image.Rect(bounds.Min.X, bounds.Min.X, bounds.Max.X, bounds.Max.Y))
-
-	for i := 0; i < len(arr); i++ {
-		for j := 0; j < len(arr[i]); j++ {
-			cur := arr[i][j]
-
-			// fmt.Printf("Pixel: (%v, %v, %v, %v)\n", cur.red, cur.blue, cur.green, cur.alpha)
-
-			// fmt.Printf("Pixel shifted: (%v, %v, %v, %v)\n\n", cur.red>>8, cur.blue>>8, cur.green>>8, cur.alpha>>8)
-			pixe := PixelManip(&cur)
-			newimg.Set(cur.x, cur.y, pixe)
-		}
-	}
-
-	filename := "output"
-
-	endProd, err := CreateJPEG(filename, newimg, 100)
-
-	if err != nil {
-		log.Fatal("Issue creating file: " + err.Error())
-	}
-
-	fmt.Printf("Created new image %v", endProd)
+	return m, bounds
 }
 
-func PixelManip(p *Pixel) color.RGBA {
+func Normalize(p *Pixel) color.RGBA {
+	normalized := uint8(((p.red >> 8) + (p.blue >> 8) + (p.green >> 8)) / 3)
 	return color.RGBA{
-		// R: uint8(p.red >> 8),
-		R: uint8(0),
-		G: uint8(p.blue >> 8),
-		B: uint8(p.green >> 8),
-		A: uint8(p.alpha >> 8),
+		R: normalized,
+		G: normalized,
+		B: normalized,
+		A: normalized,
 	}
 }
 
