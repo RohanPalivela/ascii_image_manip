@@ -49,13 +49,13 @@ func (buffer *AsciiImageBuffer) WriteRune(r rune, context *freetype.Context) (po
 
 	buffer.x += buffer.letter_size
 
-	fmt.Println("Drew " + string(r) + " at " + pt.X.String() + ", " + pt.Y.String())
+	// fmt.Println("Drew " + string(r) + " at " + pt.X.String() + ", " + pt.Y.String())
 
 	return pt, nil
 }
 
 func main() {
-	img, bounds := OpenJPEGIMG("bg.jpg")
+	img, bounds := OpenJPEGIMG("wolf.jpeg")
 
 	width := bounds.Dx()
 	height := bounds.Dy()
@@ -144,7 +144,9 @@ func main() {
 	//
 	// file.WriteString(sb.String())
 
-	newimg := image.NewRGBA(image.Rect(bounds.Min.X, bounds.Min.Y, bounds.Max.X, bounds.Max.Y))
+	// BOUNDS FOR KEEPING THE IMAGE QUALITY PERFECT:
+	px_size := 16
+	newimg := image.NewRGBA(image.Rect(bounds.Min.X, bounds.Min.Y, bounds.Max.X*px_size, bounds.Max.Y*px_size))
 	draw.Draw(newimg, newimg.Bounds(), image.NewUniform(color.Black), image.Point{}, draw.Src)
 
 	fontBytes, err := os.ReadFile("BoldPixelsFont.ttf")
@@ -162,20 +164,20 @@ func main() {
 	c := freetype.NewContext()
 
 	c.SetDPI(72)
-	c.SetFont(f)      // NEED FONT
-	c.SetFontSize(16) // 3pt font apparently translates to 4pixels
+	c.SetFont(f)                    // NEED FONT
+	c.SetFontSize(float64(px_size)) // 3pt font apparently translates to 4pixels
 	c.SetClip(newimg.Bounds())
 	c.SetDst(newimg)
 	c.SetSrc(image.White)
 
-	buffer := AsciiImageBuffer{x: 0, y: 4, width: width - 4, height: height - 4, letter_size: 16}
+	buffer := AsciiImageBuffer{x: 0, y: px_size, width: width * px_size, height: height * px_size, letter_size: px_size}
 
 	for i := range height {
 		for j := range width {
 			cur := arr[i][j]
 			// sb.WriteRune(LuminFilter(&cur, mapping))
 			if _, err := buffer.WriteRune(LuminFilter(&cur, mapping), c); err != nil {
-				fmt.Println(err.Error())
+				// fmt.Println(err.Error())
 				break
 			}
 		}
