@@ -4,11 +4,14 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"image/draw"
 	"image/jpeg"
 	"image/png"
 	"log"
 	"os"
-	"strings"
+
+	"github.com/golang/freetype"
+	"golang.org/x/image/math/fixed"
 )
 
 type Pixel struct {
@@ -20,8 +23,39 @@ type Pixel struct {
 	y     int
 }
 
+type AsciiImageBuffer struct {
+	x           int
+	y           int
+	width       int
+	height      int
+	letter_size int // a letter will take up a letter_size x letter_size amount of space (i.e. 4x4 space for each character)
+}
+
+func (buffer *AsciiImageBuffer) WriteRune(r rune, context *freetype.Context) (point fixed.Point26_6, err error) {
+	if buffer.x >= buffer.width {
+		buffer.x = 0
+		buffer.y += buffer.letter_size
+	}
+
+	if buffer.y >= buffer.height {
+		return fixed.Point26_6{}, fmt.Errorf("draw string overflow, y height is %v", buffer.y)
+	}
+
+	pt, err := context.DrawString(string(r), fixed.P(buffer.x, buffer.y))
+
+	if err != nil {
+		return fixed.Point26_6{}, err
+	}
+
+	buffer.x += buffer.letter_size
+
+	fmt.Println("Drew " + string(r) + " at " + pt.X.String() + ", " + pt.Y.String())
+
+	return pt, nil
+}
+
 func main() {
-	img, bounds := OpenJPEGIMG("wolf.jpeg")
+	img, bounds := OpenJPEGIMG("bg.jpg")
 
 	width := bounds.Dx()
 	height := bounds.Dy()
@@ -43,8 +77,6 @@ func main() {
 		8: '@',
 		9: '■',
 	}
-
-	mapping[1] = 'd'
 
 	for y := range height {
 		arr[y] = make([]Pixel, width)
@@ -71,47 +103,104 @@ func main() {
 	}
 
 	// IMAGE CREATION CODE
-	// newimg1 := image.NewRGBA(image.Rect(bounds.Min.X, bounds.Min.X, bounds.Max.X, bounds.Max.Y))
-
-	// for i := 0; i < len(arr); i++ {
-	// 	for j := 0; j < len(arr[i]); j++ {
-	// 		cur := arr[i][j]
-	// 		pixe := Normalize(&cur)
-	// 		sb.WriteRune(LuminFilter(&cur))
-	// 		newimg1.Set(cur.x, cur.y, pixe)
+	// {
+	//
+	// 	for i := 0; i < len(arr); i++ {
+	// 		for j := 0; j < len(arr[i]); j++ {
+	// 			cur := arr[i][j]
+	// 			pixe := Normalize(&cur)
+	// 			newimg1.Set(cur.x, cur.y, pixe)
+	// 		}
+	// 		fmt.Printf("\n")
 	// 	}
-	// 	fmt.Printf("\n")
+	//
+	// 	endProd, err := CreateJPEG("output1", newimg1, 100)
+	//
+	// 	if err != nil {
+	// 		log.Fatal("Issue creating file: " + err.Error())
+	// 	}
+	//
+	// 	fmt.Printf("Created new image %v\n", endProd)
 	// }
 
-	// endProd, err := CreateJPEG("output1", newimg1, 100)
-
+	// .txt output
+	// var sb strings.Builder
+	// for i := range height {
+	// 	for j := range width {
+	// 		cur := arr[i][j]
+	// 		sb.WriteRune(LuminFilter(&cur, mapping))
+	// 		sb.WriteString(" ")
+	// 	}
+	// 	sb.WriteString("\n")
+	// }
+	//
+	// file, err := os.Create("output.txt")
+	//
 	// if err != nil {
-	// 	log.Fatal("Issue creating file: " + err.Error())
+	// 	log.Fatal("Couldn't create output file " + err.Error())
 	// }
+	//
+	// defer file.Close()
+	//
+	// file.WriteString(sb.String())
 
-	// fmt.Printf("Created new image %v\n", endProd)
-	var sb strings.Builder
+	newimg := image.NewRGBA(image.Rect(bounds.Min.X, bounds.Min.Y, bounds.Max.X, bounds.Max.Y))
+	draw.Draw(newimg, newimg.Bounds(), image.NewUniform(color.Black), image.Point{}, draw.Src)
+
+	fontBytes, err := os.ReadFile("BoldPixelsFont.ttf")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	f, err := freetype.ParseFont(fontBytes)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	c := freetype.NewContext()
+
+	c.SetDPI(72)
+	c.SetFont(f)      // NEED FONT
+	c.SetFontSize(16) // 3pt font apparently translates to 4pixels
+	c.SetClip(newimg.Bounds())
+	c.SetDst(newimg)
+	c.SetSrc(image.White)
+
+	buffer := AsciiImageBuffer{x: 0, y: 4, width: width - 4, height: height - 4, letter_size: 16}
 
 	for i := range height {
 		for j := range width {
 			cur := arr[i][j]
-			sb.WriteRune(LuminFilter(&cur, mapping))
+			// sb.WriteRune(LuminFilter(&cur, mapping))
+			if _, err := buffer.WriteRune(LuminFilter(&cur, mapping), c); err != nil {
+				fmt.Println(err.Error())
+				break
+			}
 		}
-		sb.WriteString("\n")
 	}
 
-	file, err := os.Create("output.txt")
+	outFile, err := os.Create("out.png")
+	if err != nil {
+		log.Println(err)
+		os.Exit(1)
+	}
+	defer outFile.Close()
+
+	err = png.Encode(outFile, newimg)
 
 	if err != nil {
-		log.Fatal("Couldn't create output file " + err.Error())
+		log.Println(err)
+		os.Exit(1)
 	}
-
-	defer file.Close()
-
-	file.WriteString(sb.String())
 
 	fmt.Println("Created new image")
 }
+
+// *****************
+// TRANSFORM FILTERS
+// *****************
 
 func LuminFilter(p *Pixel, mapping map[int]rune) rune {
 
@@ -121,6 +210,20 @@ func LuminFilter(p *Pixel, mapping map[int]rune) rune {
 
 	return mapping[lumBuckets]
 }
+
+func Normalize(p *Pixel) color.RGBA {
+	normalized := uint8(((p.red) + (p.blue) + (p.green)) / 3)
+	return color.RGBA{
+		R: normalized,
+		G: normalized,
+		B: normalized,
+		A: uint8(p.alpha),
+	}
+}
+
+// *****************
+// IO OPERATIONS
+// *****************
 
 func OpenJPEGIMG(filename string) (image image.Image, bounding image.Rectangle) {
 	img, err := os.Open(filename)
@@ -142,16 +245,6 @@ func OpenJPEGIMG(filename string) (image image.Image, bounding image.Rectangle) 
 	bounds := m.Bounds()
 
 	return m, bounds
-}
-
-func Normalize(p *Pixel) color.RGBA {
-	normalized := uint8(((p.red >> 8) + (p.blue >> 8) + (p.green >> 8)) / 3)
-	return color.RGBA{
-		R: normalized,
-		G: normalized,
-		B: normalized,
-		A: uint8(p.alpha >> 8),
-	}
 }
 
 func CreatePNG(filename string, newimg image.Image) (output string, err error) {
