@@ -55,14 +55,14 @@ func (buffer *AsciiImageBuffer) WriteRune(r rune, context *freetype.Context) (po
 }
 
 func main() {
-	img, bounds := OpenJPEGIMG("wolf.jpeg")
+	img, bounds := OpenJPEGIMG("bg.jpg")
 
 	width := bounds.Dx()
 	height := bounds.Dy()
 
 	// keeping these the same value yields an image of ~ same size
-	sample_size := 4
-	px_size := 8
+	sample_size := 1
+	px_size := 16
 
 	fmt.Printf("Dimensions: %v x %v\n", width, height)
 
@@ -91,8 +91,8 @@ func main() {
 	}
 
 	// consolidate a pixel grid of size sample_size x sample_size into one pixel
-	for by := 0; by < pix_height; by++ {
-		for bx := 0; bx < pix_width; bx++ {
+	for by := range pix_height {
+		for bx := range pix_width {
 			x := bounds.Min.X + bx*sample_size
 			y := bounds.Min.Y + by*sample_size
 
@@ -103,7 +103,7 @@ func main() {
 
 			sample_count := 0
 
-			for offset_x := 0; offset_x < sample_size; offset_x++ {
+			for offset_x := range sample_size {
 				if x+offset_x >= bounds.Max.X {
 					break
 				}
@@ -138,27 +138,6 @@ func main() {
 		}
 	}
 
-	// .txt output
-	// var sb strings.Builder
-	// for i := range height {
-	// 	for j := range width {
-	// 		cur := arr[i][j]
-	// 		sb.WriteRune(LuminFilter(&cur, mapping))
-	// 		sb.WriteString(" ")
-	// 	}
-	// 	sb.WriteString("\n")
-	// }
-	//
-	// file, err := os.Create("output.txt")
-	//
-	// if err != nil {
-	// 	log.Fatal("Couldn't create output file " + err.Error())
-	// }
-	//
-	// defer file.Close()
-	//
-	// file.WriteString(sb.String())
-
 	// BOUNDS FOR KEEPING THE IMAGE QUALITY PERFECT:
 	out_width := pix_width * px_size
 	out_height := pix_height * px_size
@@ -181,7 +160,7 @@ func main() {
 	c := freetype.NewContext()
 
 	c.SetDPI(72)
-	c.SetFont(f)                    // NEED FONT
+	c.SetFont(f)
 	c.SetFontSize(float64(px_size)) // 3pt font apparently translates to 4pixels
 	c.SetClip(newimg.Bounds())
 	c.SetDst(newimg)
@@ -239,6 +218,29 @@ func Normalize(p *Pixel) color.RGBA {
 		A: uint8(p.alpha),
 	}
 }
+
+// func WriteToTXT(height int, width int) {
+// 	// .txt output
+// 	var sb strings.Builder
+// 	for i := range height {
+// 		for j := range width {
+// 			cur := arr[i][j]
+// 			sb.WriteRune(LuminFilter(&cur, mapping))
+// 			sb.WriteString(" ")
+// 		}
+// 		sb.WriteString("\n")
+// 	}
+
+// 	file, err := os.Create("output.txt")
+
+// 	if err != nil {
+// 		log.Fatal("Couldn't create output file " + err.Error())
+// 	}
+
+// 	defer file.Close()
+
+// 	file.WriteString(sb.String())
+// }
 
 // *****************
 // IO OPERATIONS
