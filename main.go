@@ -17,23 +17,17 @@ import (
 )
 
 type Pixel struct {
-	red   uint8
-	blue  uint8
-	green uint8
-	alpha uint8
-	x     int
-	y     int
+	color color.Color
+	x, y  int
 }
 
 type AsciiImageBuffer struct {
-	x           int
-	y           int
-	width       int
-	height      int
-	letter_size int // a letter will take up a letter_size x letter_size amount of space (i.e. 4x4 space for each character)
+	x, y          int
+	width, height int
+	letter_size   int // a letter will take up a letter_size x letter_size amount of space (i.e. 4x4 space for each character)
 }
 
-func (buffer *AsciiImageBuffer) WriteRune(r rune, context *freetype.Context) (point fixed.Point26_6, err error) {
+func (buffer *AsciiImageBuffer) WriteRune(r rune, p *Pixel, context *freetype.Context) (point fixed.Point26_6, err error) {
 	if buffer.x >= buffer.width {
 		buffer.x = 0
 		buffer.y += buffer.letter_size
@@ -43,6 +37,8 @@ func (buffer *AsciiImageBuffer) WriteRune(r rune, context *freetype.Context) (po
 		return fixed.Point26_6{}, fmt.Errorf("draw string overflow, y height is %v", buffer.y)
 	}
 
+	fmt.Println("Drawing " + (string(r)))
+	context.SetSrc(image.NewUniform(p.color))
 	pt, err := context.DrawString(string(r), fixed.P(buffer.x, buffer.y))
 
 	if err != nil {
@@ -51,8 +47,6 @@ func (buffer *AsciiImageBuffer) WriteRune(r rune, context *freetype.Context) (po
 
 	buffer.x += buffer.letter_size
 
-	// fmt.Println("Drew " + string(r) + " at " + pt.X.String() + ", " + pt.Y.String())
-
 	return pt, nil
 }
 
@@ -60,7 +54,7 @@ func main() {
 	fmt.Println("BEGINNING OPERATIONS")
 	start := time.Now()
 
-	img, bounds := OpenJPEGIMG("bg.jpg")
+	img, bounds := OpenJPEGIMG("wolf.jpeg")
 
 	LogOut(fmt.Sprintf("LOGGING >> Took %s to open image", time.Since(start)))
 	intermediate := time.Now()
@@ -69,8 +63,8 @@ func main() {
 	height := bounds.Dy()
 
 	// keeping these the same value yields an image of ~ same size
-	sample_size := 1
-	px_size := 16
+	sample_size := 8
+	px_size := 8
 
 	fmt.Printf("Dimensions: %v x %v\n", width, height)
 
@@ -106,14 +100,11 @@ func main() {
 		for bx := range pix_width {
 			x := bounds.Min.X + bx*sample_size
 			y := bounds.Min.Y + by*sample_size
-
 			red := uint32(0)
 			green := uint32(0)
 			blue := uint32(0)
 			alpha := uint32(0)
-
 			sample_count := 0
-
 			for offset_x := range sample_size {
 				if x+offset_x >= bounds.Max.X {
 					break
@@ -130,19 +121,15 @@ func main() {
 					sample_count++
 				}
 			}
-
+			fmt.Printf("Pixel: (%v, %v, %v, %v)\n", (red), (green), (blue), alpha)
 			red /= uint32(sample_count)
 			green /= uint32(sample_count)
 			blue /= uint32(sample_count)
 			alpha /= uint32(sample_count)
-
-			// fmt.Printf("Pixel: (%v, %v, %v, %v)\n", r, g, b, a)
+			fmt.Printf("Pixel: (%v, %v, %v, %v)\n", uint8(red), uint8(green), uint8(blue), alpha)
 			arr[by][bx] =
 				Pixel{
-					red:   uint8(red),
-					green: uint8(green),
-					blue:  uint8(blue),
-					alpha: uint8(alpha),
+					color: color.RGBA{uint8(red), uint8(green), uint8(blue), uint8(alpha)},
 					x:     x,
 					y:     y,
 				}
@@ -159,7 +146,7 @@ func main() {
 	newimg := image.NewRGBA(image.Rect(0, 0, out_width, out_height))
 	draw.Draw(newimg, newimg.Bounds(), image.NewUniform(color.Black), image.Point{}, draw.Src)
 
-	fontBytes, err := os.ReadFile("BoldPixelsFont.ttf")
+	fontBytes, err := os.ReadFile("MC.ttf")
 	if err != nil {
 		log.Println(err)
 		return
@@ -175,19 +162,18 @@ func main() {
 
 	c.SetDPI(72)
 	c.SetFont(f)
-	c.SetFontSize(float64(px_size)) // 3pt font apparently translates to 4pixels
+	c.SetFontSize(float64(px_size))
 	c.SetClip(newimg.Bounds())
 	c.SetDst(newimg)
-	c.SetSrc(image.White)
+	c.SetSrc(image.White) // default value ig
 
 	buffer := AsciiImageBuffer{x: 0, y: px_size, width: out_width, height: out_height, letter_size: px_size}
 
 	for i := range pix_height {
 		for j := range pix_width {
 			cur := arr[i][j]
-			// sb.WriteRune(LuminFilter(&cur, mapping))
-			if _, err := buffer.WriteRune(LuminFilter(&cur, mapping), c); err != nil {
-				// fmt.Println(err.Error())
+			if _, err := buffer.WriteRune(LuminFilter(&cur, mapping), &cur, c); err != nil {
+				fmt.Println(err.Error())
 				break
 			}
 		}
@@ -235,20 +221,26 @@ func LogOut(message string) {
 
 func LuminFilter(p *Pixel, mapping map[int]rune) rune {
 
-	luminance := float64(0.2126*float64(p.red)+0.7152*(float64(p.green))+0.0722*float64(p.blue)) / 255 // Luminance from 0-255
+	red, green, blue, _ := p.color.RGBA()
+	luminance := float64(0.2126*float64(red)+0.7152*(float64(green))+0.0722*float64(blue)) / 255 // Luminance from 0-255
 
-	lumBuckets := min(int(luminance*10), 9) // push into buckets of 0-9 (mapping)
+	fmt.Println(luminance)
+
+	lumBuckets := min(int(luminance/10), 9) // push into buckets of 0-9 (mapping)
+
+	fmt.Printf("%c\n", mapping[lumBuckets])
 
 	return mapping[lumBuckets]
 }
 
 func Normalize(p *Pixel) color.RGBA {
-	normalized := uint8(((p.red) + (p.blue) + (p.green)) / 3)
+	red, green, blue, alpha := p.color.RGBA()
+	normalized := uint8(((red) + (blue) + (green)) / 3)
 	return color.RGBA{
 		R: normalized,
 		G: normalized,
 		B: normalized,
-		A: uint8(p.alpha),
+		A: uint8(alpha),
 	}
 }
 
