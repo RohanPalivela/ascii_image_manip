@@ -9,6 +9,8 @@ import (
 	"image/png"
 	"log"
 	"os"
+	"strings"
+	"time"
 
 	"github.com/golang/freetype"
 	"golang.org/x/image/math/fixed"
@@ -55,7 +57,13 @@ func (buffer *AsciiImageBuffer) WriteRune(r rune, context *freetype.Context) (po
 }
 
 func main() {
+	fmt.Println("BEGINNING OPERATIONS")
+	start := time.Now()
+
 	img, bounds := OpenJPEGIMG("bg.jpg")
+
+	LogOut(fmt.Sprintf("LOGGING >> Took %s to open image", time.Since(start)))
+	intermediate := time.Now()
 
 	width := bounds.Dx()
 	height := bounds.Dy()
@@ -89,6 +97,9 @@ func main() {
 	for y := range pix_height {
 		arr[y] = make([]Pixel, pix_width)
 	}
+
+	LogOut(fmt.Sprintf("LOGGING >> Took %s to make array", time.Since(intermediate)))
+	intermediate = time.Now()
 
 	// consolidate a pixel grid of size sample_size x sample_size into one pixel
 	for by := range pix_height {
@@ -138,6 +149,9 @@ func main() {
 		}
 	}
 
+	LogOut(fmt.Sprintf("LOGGING >> Took %s to propagate pixel info", time.Since(intermediate)))
+	intermediate = time.Now()
+
 	// BOUNDS FOR KEEPING THE IMAGE QUALITY PERFECT:
 	out_width := pix_width * px_size
 	out_height := pix_height * px_size
@@ -179,6 +193,9 @@ func main() {
 		}
 	}
 
+	LogOut(fmt.Sprintf("LOGGING >> Took %s to draw pixels", time.Since(intermediate)))
+	intermediate = time.Now()
+
 	outFile, err := os.Create("out.png")
 	if err != nil {
 		log.Println(err)
@@ -193,7 +210,23 @@ func main() {
 		os.Exit(1)
 	}
 
+	LogOut(fmt.Sprintf("LOGGING >> Total execution time: %s", time.Since(start)))
 	fmt.Println("Created new image")
+}
+
+// *****************
+// LOGGING FXNS
+// *****************
+func LogOut(message string) {
+	size := len(message)
+
+	var sb strings.Builder
+	for i := 0; i < size+4; i++ {
+		sb.WriteRune('*')
+	}
+	fmt.Println("\n" + sb.String())
+	fmt.Println("* " + message + " *")
+	fmt.Println(sb.String() + "\n")
 }
 
 // *****************
