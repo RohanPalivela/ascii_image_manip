@@ -37,7 +37,7 @@ func (buffer *AsciiImageBuffer) WriteRune(r rune, p *Pixel, context *freetype.Co
 		return fixed.Point26_6{}, fmt.Errorf("draw string overflow, y height is %v", buffer.y)
 	}
 
-	fmt.Println("Drawing " + (string(r)))
+	// fmt.Println("Drawing " + (string(r)))
 	context.SetSrc(image.NewUniform(p.color))
 	pt, err := context.DrawString(string(r), fixed.P(buffer.x, buffer.y))
 
@@ -54,7 +54,18 @@ func main() {
 	fmt.Println("BEGINNING OPERATIONS")
 	start := time.Now()
 
-	img, bounds := OpenJPEGIMG("wolf.jpeg")
+	img_file := "1920.png"
+
+	var img image.Image
+	var bounds image.Rectangle
+
+	fmt.Println(img_file[strings.Index(img_file, "."):])
+	switch img_file[strings.Index(img_file, "."):] {
+	case ".png":
+		img, bounds = OpenPNGImg(img_file)
+	case ".jpeg", ".jpg":
+		img, bounds = OpenJPEGImg(img_file)
+	}
 
 	LogOut(fmt.Sprintf("LOGGING >> Took %s to open image", time.Since(start)))
 	intermediate := time.Now()
@@ -121,12 +132,12 @@ func main() {
 					sample_count++
 				}
 			}
-			fmt.Printf("Pixel: (%v, %v, %v, %v)\n", (red), (green), (blue), alpha)
+			// fmt.Printf("Pixel: (%v, %v, %v, %v)\n", (red), (green), (blue), alpha)
 			red /= uint32(sample_count)
 			green /= uint32(sample_count)
 			blue /= uint32(sample_count)
 			alpha /= uint32(sample_count)
-			fmt.Printf("Pixel: (%v, %v, %v, %v)\n", uint8(red), uint8(green), uint8(blue), alpha)
+			// fmt.Printf("Pixel: (%v, %v, %v, %v)\n", uint8(red), uint8(green), uint8(blue), alpha)
 			arr[by][bx] =
 				Pixel{
 					color: color.RGBA{uint8(red), uint8(green), uint8(blue), uint8(alpha)},
@@ -146,7 +157,7 @@ func main() {
 	newimg := image.NewRGBA(image.Rect(0, 0, out_width, out_height))
 	draw.Draw(newimg, newimg.Bounds(), image.NewUniform(color.Black), image.Point{}, draw.Src)
 
-	fontBytes, err := os.ReadFile("MC.ttf")
+	fontBytes, err := os.ReadFile("Fonts/MC.ttf")
 	if err != nil {
 		log.Println(err)
 		return
@@ -195,6 +206,7 @@ func main() {
 		log.Println(err)
 		os.Exit(1)
 	}
+	LogOut(fmt.Sprintf("LOGGING >> Time to encode output image: %s", time.Since(intermediate)))
 
 	LogOut(fmt.Sprintf("LOGGING >> Total execution time: %s", time.Since(start)))
 	fmt.Println("Created new image")
@@ -224,11 +236,11 @@ func LuminFilter(p *Pixel, mapping map[int]rune) rune {
 	red, green, blue, _ := p.color.RGBA()
 	luminance := float64(0.2126*float64(red)+0.7152*(float64(green))+0.0722*float64(blue)) / 255 // Luminance from 0-255
 
-	fmt.Println(luminance)
+	// fmt.Println(luminance)
 
 	lumBuckets := min(int(luminance/10), 9) // push into buckets of 0-9 (mapping)
 
-	fmt.Printf("%c\n", mapping[lumBuckets])
+	// fmt.Printf("%c\n", mapping[lumBuckets])
 
 	return mapping[lumBuckets]
 }
@@ -271,7 +283,29 @@ func Normalize(p *Pixel) color.RGBA {
 // IO OPERATIONS
 // *****************
 
-func OpenJPEGIMG(filename string) (image image.Image, bounding image.Rectangle) {
+func OpenPNGImg(filename string) (image image.Image, bounding image.Rectangle) {
+	img, err := os.Open(filename)
+
+	if err != nil {
+		log.Fatal("Error opening file: " + err.Error())
+	}
+
+	fmt.Println("Opened " + img.Name())
+
+	defer img.Close()
+
+	m, err := png.Decode(img)
+
+	if err != nil {
+		log.Fatal("Could not decode image: " + err.Error())
+	}
+
+	bounds := m.Bounds()
+
+	return m, bounds
+}
+
+func OpenJPEGImg(filename string) (image image.Image, bounding image.Rectangle) {
 	img, err := os.Open(filename)
 
 	if err != nil {
