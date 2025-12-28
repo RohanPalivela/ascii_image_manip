@@ -17,16 +17,15 @@ import (
 )
 
 func main() {
-	fmt.Println("BEGINNING OPERATIONS")
+	fmt.Println("** BEGINNING OPERATIONS **")
 	start := time.Now()
 
-	file_name := "1920.png"
+	file_name := "wolf.jpeg"
 	img_file := "Images/" + file_name
 
 	var img image.Image
 	var bounds image.Rectangle
 
-	fmt.Println(img_file[strings.Index(img_file, "."):])
 	switch img_file[strings.Index(img_file, "."):] {
 	case ".png":
 		img, bounds = OpenPNGImg(img_file)
@@ -45,11 +44,16 @@ func main() {
 	sample_size := 8
 	px_size := 8
 
-	fmt.Printf("Dimensions: %v x %v\n", width, height)
+	fmt.Printf("Info: Original Dimensions: %v x %v\n", width, height)
 
 	pix_width := width / sample_size
 	pix_height := height / sample_size
-	fmt.Printf("Shrinking to: %v x %v\n", pix_width, pix_height)
+	fmt.Printf("Info: Shrinking to: %v x %v\n\n", pix_width, pix_height)
+
+	arr := InitializeArray(img, sample_size, pix_height, pix_width)
+
+	LogOut(fmt.Sprintf("LOGGING >> Took %s to make and propagate pixel info", time.Since(intermediate)))
+	intermediate = time.Now()
 
 	// luminescence to ascii mapping
 	mapping := map[int]rune{
@@ -65,22 +69,10 @@ func main() {
 		9: '■',
 	}
 
-	LogOut(fmt.Sprintf("LOGGING >> Took %s to make array", time.Since(intermediate)))
-	intermediate = time.Now()
-
-	arr := InitializeArray(img, sample_size, pix_height, pix_width)
-
-	LogOut(fmt.Sprintf("LOGGING >> Took %s to propagate pixel info", time.Since(intermediate)))
-	intermediate = time.Now()
-
-	for i := range pix_height {
-		for j := range pix_width {
-			cur := &arr[i][j]
-			run := transforms.LuminFilter(cur, mapping)
-			cur.Character = run
-			// fmt.Printf("Character: %c, rgb: %s\n", cur.Character, cur.Color)
-		}
-	}
+	/*
+		TRANSFORMATIONS.
+	*/
+	transforms.LuminFilter(arr, mapping)
 
 	LogOut(fmt.Sprintf("LOGGING >> CHARACTER TRANSFORMATIONS DONE: %s", time.Since(intermediate)))
 	intermediate = time.Now()
@@ -99,16 +91,7 @@ func main() {
 	LogOut(fmt.Sprintf("LOGGING >> Did pre-processing for image drawing (blank image, created image buffer, parsed font): %s", time.Since(intermediate)))
 	intermediate = time.Now()
 
-	for i := range pix_height {
-		for j := range pix_width {
-			cur := &arr[i][j]
-			// fmt.Printf("Character: %c, rgb: %s\n", cur.Character, cur.Color)
-			if _, err := buffer.WriteRune(context, cur.Color, cur.Character); err != nil {
-				fmt.Println(err.Error())
-				break
-			}
-		}
-	}
+	buffer.WriteArray(context, arr)
 
 	LogOut(fmt.Sprintf("LOGGING >> Took %s to draw pixels in buffer", time.Since(intermediate)))
 	intermediate = time.Now()
@@ -153,7 +136,7 @@ func WriteToTXT(height int, width int, mapping map[int]rune, arr [][]transforms.
 	for i := range height {
 		for j := range width {
 			cur := arr[i][j]
-			sb.WriteRune(transforms.LuminFilter(&cur, mapping))
+			sb.WriteRune(cur.Character)
 			sb.WriteString(" ")
 		}
 		sb.WriteString("\n")
@@ -181,7 +164,7 @@ func OpenPNGImg(filename string) (image image.Image, bounding image.Rectangle) {
 		log.Fatal("Error opening file: " + err.Error())
 	}
 
-	fmt.Println("Opened " + img.Name())
+	fmt.Println("Opened " + img.Name() + "\n")
 
 	defer img.Close()
 
@@ -203,7 +186,7 @@ func OpenJPEGImg(filename string) (image image.Image, bounding image.Rectangle) 
 		log.Fatal("Error opening file: " + err.Error())
 	}
 
-	fmt.Println("Opened " + img.Name())
+	fmt.Println("Opened " + img.Name() + "\n")
 
 	defer img.Close()
 

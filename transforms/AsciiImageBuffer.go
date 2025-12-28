@@ -44,3 +44,18 @@ func (buffer *AsciiImageBuffer) WriteRune(context *freetype.Context, c color.Col
 
 	return pt, nil
 }
+
+/* Writes array to the Context provided. AsciiImageBuffer keeps track of the current position, does wrapping for you.
+ */
+func (buffer *AsciiImageBuffer) WriteArray(context *freetype.Context, arr [][]Pixel) {
+	for i := range len(arr) {
+		for j := range len(arr[i]) {
+			cur := &arr[i][j]
+			// fmt.Printf("Character: %c, rgb: %s\n", cur.Character, cur.Color)
+			if _, err := buffer.WriteRune(context, cur.Color, cur.Character); err != nil {
+				fmt.Println(err.Error())
+				break
+			}
+		}
+	}
+}

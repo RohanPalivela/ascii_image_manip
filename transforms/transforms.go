@@ -8,8 +8,7 @@ import (
 // TRANSFORM FILTERS
 // *****************
 
-func LuminFilter(p *Pixel, mapping map[int]rune) rune {
-
+func luminize(p *Pixel, mapping map[int]rune) rune {
 	red, green, blue, _ := p.Color.RGBA()
 	luminance := float64(0.2126*float64(red)+0.7152*(float64(green))+0.0722*float64(blue)) / 255 // Luminance from 0-255
 
@@ -20,6 +19,22 @@ func LuminFilter(p *Pixel, mapping map[int]rune) rune {
 	// fmt.Printf("%c\n", mapping[lumBuckets])
 
 	return mapping[lumBuckets]
+}
+
+func LuminFilter(arr [][]Pixel, mapping map[int]rune) {
+	for i := range len(arr) {
+		for j := range len(arr[i]) {
+			cur := &arr[i][j]
+			run := luminize(cur, mapping)
+			cur.Character = run
+			// fmt.Printf("Character: %c, rgb: %s\n", cur.Character, cur.Color)
+		}
+	}
+
+}
+
+func SobelFilter() {
+
 }
 
 func Normalize(p *Pixel) color.RGBA {
