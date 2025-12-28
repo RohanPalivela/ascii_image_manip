@@ -3,6 +3,7 @@ package transforms
 import (
 	"fmt"
 	"image"
+	"image/color"
 
 	"github.com/golang/freetype"
 	"golang.org/x/image/math/fixed"
@@ -21,7 +22,7 @@ func InitializeBuffer(x int, y int, width int, height int, letter_size int) (buf
 
 /* Writes rune to the Context provided. AsciiImageBuffer keeps track of the current position, does wrapping for you.
  */
-func (buffer *AsciiImageBuffer) WriteRune(r rune, p *Pixel, context *freetype.Context) (point fixed.Point26_6, err error) {
+func (buffer *AsciiImageBuffer) WriteRune(context *freetype.Context, c color.Color, r rune) (point fixed.Point26_6, err error) {
 	if buffer.x >= buffer.width {
 		buffer.x = 0
 		buffer.y += buffer.letter_size
@@ -32,7 +33,7 @@ func (buffer *AsciiImageBuffer) WriteRune(r rune, p *Pixel, context *freetype.Co
 	}
 
 	// fmt.Println("Drawing " + (string(r)))
-	context.SetSrc(image.NewUniform(p.Color))
+	context.SetSrc(image.NewUniform(c))
 	pt, err := context.DrawString(string(r), fixed.P(buffer.x, buffer.y))
 
 	if err != nil {

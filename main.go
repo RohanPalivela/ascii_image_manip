@@ -20,7 +20,8 @@ func main() {
 	fmt.Println("BEGINNING OPERATIONS")
 	start := time.Now()
 
-	img_file := "Images/1920.png"
+	file_name := "1920.png"
+	img_file := "Images/" + file_name
 
 	var img image.Image
 	var bounds image.Rectangle
@@ -116,6 +117,18 @@ func main() {
 	LogOut(fmt.Sprintf("LOGGING >> Took %s to propagate pixel info", time.Since(intermediate)))
 	intermediate = time.Now()
 
+	for i := range pix_height {
+		for j := range pix_width {
+			cur := &arr[i][j]
+			run := transforms.LuminFilter(cur, mapping)
+			cur.Character = run
+			// fmt.Printf("Character: %c, rgb: %s\n", cur.Character, cur.Color)
+		}
+	}
+
+	LogOut(fmt.Sprintf("LOGGING >> CHARACTER TRANSFORMATIONS DONE: %s", time.Since(intermediate)))
+	intermediate = time.Now()
+
 	// BOUNDS FOR KEEPING THE IMAGE QUALITY PERFECT:
 	out_width := pix_width * px_size
 	out_height := pix_height * px_size
@@ -146,17 +159,21 @@ func main() {
 
 	buffer := transforms.InitializeBuffer(0, px_size, out_width, out_height, px_size)
 
+	LogOut(fmt.Sprintf("LOGGING >> Did pre-processing for image drawing (blank image, created image buffer, parsed font): %s", time.Since(intermediate)))
+	intermediate = time.Now()
+
 	for i := range pix_height {
 		for j := range pix_width {
-			cur := arr[i][j]
-			if _, err := buffer.WriteRune(transforms.LuminFilter(&cur, mapping), &cur, c); err != nil {
+			cur := &arr[i][j]
+			// fmt.Printf("Character: %c, rgb: %s\n", cur.Character, cur.Color)
+			if _, err := buffer.WriteRune(c, cur.Color, cur.Character); err != nil {
 				fmt.Println(err.Error())
 				break
 			}
 		}
 	}
 
-	LogOut(fmt.Sprintf("LOGGING >> Took %s to draw pixels", time.Since(intermediate)))
+	LogOut(fmt.Sprintf("LOGGING >> Took %s to draw pixels in buffer", time.Since(intermediate)))
 	intermediate = time.Now()
 
 	outFile, err := os.Create("out.png")
@@ -188,7 +205,7 @@ func LogOut(message string) {
 	for i := 0; i < size+4; i++ {
 		sb.WriteRune('*')
 	}
-	fmt.Println("\n" + sb.String())
+	fmt.Println(sb.String())
 	fmt.Println("* " + message + " *")
 	fmt.Println(sb.String() + "\n")
 }
