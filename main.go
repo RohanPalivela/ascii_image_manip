@@ -40,6 +40,7 @@ func main() {
 	width := bounds.Dx()
 	height := bounds.Dy()
 
+	// IMPORTANT FOR IMAGE SIZES ************
 	// keeping these the same value yields an image of ~ same size
 	sample_size := 8
 	px_size := 8
@@ -49,8 +50,6 @@ func main() {
 	pix_width := width / sample_size
 	pix_height := height / sample_size
 	fmt.Printf("Shrinking to: %v x %v\n", pix_width, pix_height)
-
-	arr := make([][]transforms.Pixel, pix_height)
 
 	// luminescence to ascii mapping
 	mapping := map[int]rune{
@@ -66,53 +65,10 @@ func main() {
 		9: '■',
 	}
 
-	for y := range pix_height {
-		arr[y] = make([]transforms.Pixel, pix_width)
-	}
-
 	LogOut(fmt.Sprintf("LOGGING >> Took %s to make array", time.Since(intermediate)))
 	intermediate = time.Now()
 
-	// consolidate a pixel grid of size sample_size x sample_size into one pixel
-	for by := range pix_height {
-		for bx := range pix_width {
-			x := bounds.Min.X + bx*sample_size
-			y := bounds.Min.Y + by*sample_size
-			red := uint32(0)
-			green := uint32(0)
-			blue := uint32(0)
-			alpha := uint32(0)
-			sample_count := 0
-			for offset_x := range sample_size {
-				if x+offset_x >= bounds.Max.X {
-					break
-				}
-				for offset_y := 0; offset_y < sample_size; offset_y++ {
-					if y+offset_y >= bounds.Max.Y {
-						break
-					}
-					r, g, b, a := img.At(x+offset_x, y+offset_y).RGBA()
-					red += r >> 8
-					green += g >> 8
-					blue += b >> 8
-					alpha += a >> 8
-					sample_count++
-				}
-			}
-			// fmt.Printf("Pixel: (%v, %v, %v, %v)\n", (red), (green), (blue), alpha)
-			red /= uint32(sample_count)
-			green /= uint32(sample_count)
-			blue /= uint32(sample_count)
-			alpha /= uint32(sample_count)
-			// fmt.Printf("Pixel: (%v, %v, %v, %v)\n", uint8(red), uint8(green), uint8(blue), alpha)
-			arr[by][bx] =
-				transforms.Pixel{
-					Color: color.RGBA{uint8(red), uint8(green), uint8(blue), uint8(alpha)},
-					X:     x,
-					Y:     y,
-				}
-		}
-	}
+	arr := InitializeArray(img, sample_size, pix_height, pix_width)
 
 	LogOut(fmt.Sprintf("LOGGING >> Took %s to propagate pixel info", time.Since(intermediate)))
 	intermediate = time.Now()
@@ -136,26 +92,7 @@ func main() {
 	newimg := image.NewRGBA(image.Rect(0, 0, out_width, out_height))
 	draw.Draw(newimg, newimg.Bounds(), image.NewUniform(color.Black), image.Point{}, draw.Src)
 
-	fontBytes, err := os.ReadFile("Fonts/MC.ttf")
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	f, err := freetype.ParseFont(fontBytes)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	c := freetype.NewContext()
-
-	c.SetDPI(72)
-	c.SetFont(f)
-	c.SetFontSize(float64(px_size))
-	c.SetClip(newimg.Bounds())
-	c.SetDst(newimg)
-	c.SetSrc(image.White) // default value ig
+	context := InitializeContext(newimg, float64(px_size))
 
 	buffer := transforms.InitializeBuffer(0, px_size, out_width, out_height, px_size)
 
@@ -166,7 +103,7 @@ func main() {
 		for j := range pix_width {
 			cur := &arr[i][j]
 			// fmt.Printf("Character: %c, rgb: %s\n", cur.Character, cur.Color)
-			if _, err := buffer.WriteRune(c, cur.Color, cur.Character); err != nil {
+			if _, err := buffer.WriteRune(context, cur.Color, cur.Character); err != nil {
 				fmt.Println(err.Error())
 				break
 			}
@@ -319,4 +256,80 @@ func CreateJPEG(filename string, newimg image.Image, quality int) (output string
 	}
 
 	return name, nil
+}
+
+func InitializeContext(newimg draw.Image, px_size float64) (cont *freetype.Context) {
+	fontBytes, err := os.ReadFile("Fonts/MC.ttf")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	f, err := freetype.ParseFont(fontBytes)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	c := freetype.NewContext()
+
+	c.SetDPI(72)
+	c.SetFont(f)
+	c.SetFontSize(px_size)
+	c.SetClip(newimg.Bounds())
+	c.SetDst(newimg)
+	c.SetSrc(image.White) // default value ig
+
+	return c
+}
+
+func InitializeArray(img image.Image, sample_size int, pix_height int, pix_width int) (pixels [][]transforms.Pixel) {
+	arr := make([][]transforms.Pixel, pix_height)
+	for y := range pix_height {
+		arr[y] = make([]transforms.Pixel, pix_width)
+	}
+
+	bounds := img.Bounds()
+	// consolidate a pixel grid of size sample_size x sample_size into one pixel
+	for by := range pix_height {
+		for bx := range pix_width {
+			x := bounds.Min.X + bx*sample_size
+			y := bounds.Min.Y + by*sample_size
+			red := uint32(0)
+			green := uint32(0)
+			blue := uint32(0)
+			alpha := uint32(0)
+			sample_count := 0
+			for offset_x := range sample_size {
+				if x+offset_x >= bounds.Max.X {
+					break
+				}
+				for offset_y := 0; offset_y < sample_size; offset_y++ {
+					if y+offset_y >= bounds.Max.Y {
+						break
+					}
+					r, g, b, a := img.At(x+offset_x, y+offset_y).RGBA()
+					red += r >> 8
+					green += g >> 8
+					blue += b >> 8
+					alpha += a >> 8
+					sample_count++
+				}
+			}
+			// fmt.Printf("Pixel: (%v, %v, %v, %v)\n", (red), (green), (blue), alpha)
+			red /= uint32(sample_count)
+			green /= uint32(sample_count)
+			blue /= uint32(sample_count)
+			alpha /= uint32(sample_count)
+			// fmt.Printf("Pixel: (%v, %v, %v, %v)\n", uint8(red), uint8(green), uint8(blue), alpha)
+			arr[by][bx] =
+				transforms.Pixel{
+					Color: color.RGBA{uint8(red), uint8(green), uint8(blue), uint8(alpha)},
+					X:     x,
+					Y:     y,
+				}
+		}
+	}
+
+	return arr
 }
