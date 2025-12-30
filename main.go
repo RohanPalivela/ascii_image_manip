@@ -20,7 +20,7 @@ func main() {
 	fmt.Println("** BEGINNING OPERATIONS **")
 	start := time.Now()
 
-	file_name := "wolf.jpeg"
+	file_name := "1920.png"
 	img_file := "Images/" + file_name
 
 	var img image.Image
@@ -41,8 +41,8 @@ func main() {
 
 	// IMPORTANT FOR IMAGE SIZES ************
 	// keeping these the same value yields an image of ~ same size
-	sample_size := 8
-	px_size := 8
+	sample_size := 1
+	px_size := 1
 
 	fmt.Printf("Info: Original Dimensions: %v x %v\n", width, height)
 
@@ -56,24 +56,32 @@ func main() {
 	intermediate = time.Now()
 
 	// luminescence to ascii mapping
-	mapping := map[int]rune{
-		0: ' ',
-		1: '.',
-		2: ':',
-		3: 'c',
-		4: 'o',
-		5: 'C',
-		6: 'O',
-		7: '0',
-		8: '@',
-		9: '■',
-	}
+	// mapping := map[int]rune{
+	// 	0: ' ',
+	// 	1: '.',
+	// 	2: ':',
+	// 	3: 'c',
+	// 	4: 'o',
+	// 	5: 'C',
+	// 	6: 'O',
+	// 	7: '0',
+	// 	8: '@',
+	// 	9: '■',
+	// }
 
 	/*
 		TRANSFORMATIONS.
 	*/
-	transforms.LuminFilter(arr, mapping)
+	// transforms.LuminFilter(arr, mapping)
+	arr = transforms.GaussianBlur(arr, 51)
 
+	// for i := range len(arr) {
+	// 	for j := range len(arr[0]) {
+	// 		r, g, b, a := arr[i][j].Color.RGBA()
+	// 		fmt.Printf("(%v, %v, %v, %v) ", r>>8, g>>8, b>>8, a>>8)
+	// 	}
+	// 	fmt.Println()
+	// }
 	LogOut(fmt.Sprintf("LOGGING >> CHARACTER TRANSFORMATIONS DONE: %s", time.Since(intermediate)))
 	intermediate = time.Now()
 
@@ -86,7 +94,7 @@ func main() {
 
 	context := InitializeContext(newimg, float64(px_size))
 
-	buffer := transforms.InitializeBuffer(0, px_size, out_width, out_height, px_size)
+	buffer := transforms.InitializeBuffer(0, px_size, out_width, out_height, px_size, newimg)
 
 	LogOut(fmt.Sprintf("LOGGING >> Did pre-processing for image drawing (blank image, created image buffer, parsed font): %s", time.Since(intermediate)))
 	intermediate = time.Now()
@@ -307,9 +315,10 @@ func InitializeArray(img image.Image, sample_size int, pix_height int, pix_width
 			// fmt.Printf("Pixel: (%v, %v, %v, %v)\n", uint8(red), uint8(green), uint8(blue), alpha)
 			arr[by][bx] =
 				transforms.Pixel{
-					Color: color.RGBA{uint8(red), uint8(green), uint8(blue), uint8(alpha)},
-					X:     x,
-					Y:     y,
+					R: uint8(red),
+					G: uint8(green),
+					B: uint8(blue),
+					A: uint8(alpha),
 				}
 		}
 	}

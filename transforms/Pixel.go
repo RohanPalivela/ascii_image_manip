@@ -1,9 +1,6 @@
 package transforms
 
-import "image/color"
-
 type Pixel struct {
-	Color     color.Color
-	X, Y      int
-	Character rune
+	R, G, B, A uint8
+	Character  rune
 }

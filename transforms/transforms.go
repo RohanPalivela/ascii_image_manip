@@ -9,7 +9,7 @@ import (
 // *****************
 
 func luminize(p *Pixel, mapping map[int]rune) rune {
-	red, green, blue, _ := p.Color.RGBA()
+	red, green, blue := p.R, p.G, p.B
 	luminance := float64(0.2126*float64(red)+0.7152*(float64(green))+0.0722*float64(blue)) / 255 // Luminance from 0-255
 
 	// fmt.Println(luminance)
@@ -30,7 +30,6 @@ func LuminFilter(arr [][]Pixel, mapping map[int]rune) {
 			// fmt.Printf("Character: %c, rgb: %s\n", cur.Character, cur.Color)
 		}
 	}
-
 }
 
 func SobelFilter() {
@@ -38,7 +37,7 @@ func SobelFilter() {
 }
 
 func Normalize(p *Pixel) color.RGBA {
-	red, green, blue, alpha := p.Color.RGBA()
+	red, green, blue, alpha := p.R, p.G, p.B, p.A
 	normalized := uint8(((red) + (blue) + (green)) / 3)
 	return color.RGBA{
 		R: normalized,
