@@ -36,6 +36,8 @@ func main() {
 	LogOut(fmt.Sprintf("LOGGING >> Took %s to open image", time.Since(start)))
 	intermediate := time.Now()
 
+	operations := time.Now()
+
 	width := bounds.Dx()
 	height := bounds.Dy()
 
@@ -55,16 +57,17 @@ func main() {
 	LogOut(fmt.Sprintf("LOGGING >> Took %s to make and propagate pixel info", time.Since(intermediate)))
 	intermediate = time.Now()
 
-	GetRunes(arr)
-	arr = transforms.GaussianBlur(arr, 51)
+	// GetRunes(arr)
+	arr = transforms.GaussianBlur1D(arr, 51)
 
 	// for i := range len(arr) {
 	// 	for j := range len(arr[0]) {
-	// 		r, g, b, a := arr[i][j].Color.RGBA()
-	// 		fmt.Printf("(%v, %v, %v, %v) ", r>>8, g>>8, b>>8, a>>8)
+	// 		cur := arr[i][j]
+	// 		fmt.Printf("(%v, %v, %v, %v) ", cur.R, cur.G, cur.B, cur.A)
 	// 	}
 	// 	fmt.Println()
 	// }
+
 	LogOut(fmt.Sprintf("LOGGING >> CHARACTER TRANSFORMATIONS DONE: %s", time.Since(intermediate)))
 	intermediate = time.Now()
 
@@ -87,11 +90,14 @@ func main() {
 	LogOut(fmt.Sprintf("LOGGING >> Took %s to draw pixels in buffer", time.Since(intermediate)))
 	intermediate = time.Now()
 
+	op_end := time.Since(operations)
+
 	outFile, err := os.Create("out.png")
 	if err != nil {
 		log.Println(err)
 		os.Exit(1)
 	}
+
 	defer outFile.Close()
 
 	err = png.Encode(outFile, newimg)
@@ -104,7 +110,9 @@ func main() {
 	LogOut(fmt.Sprintf("LOGGING >> Time to encode output image: %s", time.Since(intermediate)))
 
 	LogOut(fmt.Sprintf("LOGGING >> Total execution time: %s", time.Since(start)))
+	LogOut(fmt.Sprintf("LOGGING >> Took %s for non-(encode/decode) operations", op_end))
 	fmt.Println("Created new image")
+	intermediate = time.Now()
 }
 
 // *****************

@@ -8,23 +8,14 @@ import (
 	"math"
 )
 
-func xDoG(img [][]Pixel, threshold float64, kernel_size int) [][]Pixel {
-	// blur twice
-	// subtract w/ threshold
-	// return image
-	// DONE!
-
-	return nil
-}
-
 // Creates a Gaussian Blur effect with a kernel_size x kernel_size convolution matrix
-func GaussianBlur(img [][]Pixel, kernel_size int) [][]Pixel {
+func GaussianBlur2D(img [][]Pixel, kernel_size int) [][]Pixel {
 	if kernel_size%2 != 1 {
 		panic("Enter odd number for kernel_size")
 	}
-	kernel := createKernel(kernel_size)
+	kernel := createKernel2D(kernel_size)
 
-	blur1 := blur(img, kernel)
+	blur1 := blur2D(img, kernel)
 
 	fmt.Printf("(%v, %v) \n", len(blur1), len(blur1[0]))
 	// for i := range len(blur1) {
@@ -38,7 +29,7 @@ func GaussianBlur(img [][]Pixel, kernel_size int) [][]Pixel {
 	return blur1
 }
 
-func createKernel(matrix_size int) [][]float64 {
+func createKernel2D(matrix_size int) [][]float64 {
 	kernel := make([][]float64, matrix_size)
 
 	for i := range matrix_size {
@@ -80,7 +71,7 @@ func gaussianFunction2D(x float64, y float64, sigma float64) float64 {
 	return result
 }
 
-func blur(img [][]Pixel, kernel [][]float64) [][]Pixel {
+func blur2D(img [][]Pixel, kernel [][]float64) [][]Pixel {
 	img_width := len(img[0])
 	img_height := len(img)
 
@@ -135,8 +126,4 @@ func blur(img [][]Pixel, kernel [][]float64) [][]Pixel {
 	}
 
 	return blurred
-}
-
-func subtract(blur1 [][]Pixel, blur2 [][]Pixel, threshold int) [][]Pixel {
-	return nil
 }
