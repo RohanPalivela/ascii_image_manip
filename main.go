@@ -55,24 +55,7 @@ func main() {
 	LogOut(fmt.Sprintf("LOGGING >> Took %s to make and propagate pixel info", time.Since(intermediate)))
 	intermediate = time.Now()
 
-	// luminescence to ascii mapping
-	// mapping := map[int]rune{
-	// 	0: ' ',
-	// 	1: '.',
-	// 	2: ':',
-	// 	3: 'c',
-	// 	4: 'o',
-	// 	5: 'C',
-	// 	6: 'O',
-	// 	7: '0',
-	// 	8: '@',
-	// 	9: '■',
-	// }
-
-	/*
-		TRANSFORMATIONS.
-	*/
-	// transforms.LuminFilter(arr, mapping)
+	GetRunes(arr)
 	arr = transforms.GaussianBlur(arr, 51)
 
 	// for i := range len(arr) {
@@ -117,6 +100,7 @@ func main() {
 		log.Println(err)
 		os.Exit(1)
 	}
+
 	LogOut(fmt.Sprintf("LOGGING >> Time to encode output image: %s", time.Since(intermediate)))
 
 	LogOut(fmt.Sprintf("LOGGING >> Total execution time: %s", time.Since(start)))
@@ -324,4 +308,25 @@ func InitializeArray(img image.Image, sample_size int, pix_height int, pix_width
 	}
 
 	return arr
+}
+
+func GetRunes(arr [][]transforms.Pixel) {
+	// luminescence to ascii mapping
+	mapping := map[int]rune{
+		0: ' ',
+		1: '.',
+		2: ':',
+		3: 'c',
+		4: 'o',
+		5: 'C',
+		6: 'O',
+		7: '0',
+		8: '@',
+		9: '■',
+	}
+
+	/*
+		TRANSFORMATIONS.
+	*/
+	transforms.LuminFilter(arr, mapping)
 }
