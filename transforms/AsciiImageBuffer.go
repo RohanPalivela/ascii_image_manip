@@ -35,6 +35,7 @@ func (buffer *AsciiImageBuffer) WriteRune(context *freetype.Context, c color.Col
 
 	// fmt.Println("Drawing " + (string(r)))
 	context.SetSrc(image.NewUniform(c))
+	// context.SetSrc(image.NewUniform(image.White)) // for no color
 	if r == 0 {
 		for i := buffer.x; i < buffer.x+buffer.letter_size; i++ {
 			// we draw from bottom left, so translate up one letter size

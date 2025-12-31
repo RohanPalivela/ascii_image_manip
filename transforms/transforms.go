@@ -16,9 +16,9 @@ func Luminance(p *Pixel) float64 {
 func luminize(p *Pixel, mapping map[int]rune) rune {
 	luminance := Luminance(p) / 255
 
-	// fmt.Println(luminance)
+	// fmt.Println(luminance * 10)
 
-	lumBuckets := min(int(luminance/10), 9) // push into buckets of 0-9 (mapping)
+	lumBuckets := min(int(luminance*10), 9) // push into buckets of 0-9 (mapping)
 
 	// fmt.Printf("%c\n", mapping[lumBuckets])
 

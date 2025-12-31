@@ -43,8 +43,8 @@ func main() {
 
 	// IMPORTANT FOR IMAGE SIZES ************
 	// keeping these the same value yields an image of ~ same size
-	sample_size := 1
-	px_size := 1
+	sample_size := 8
+	px_size := 8
 
 	fmt.Printf("Info: Original Dimensions: %v x %v\n", width, height)
 
@@ -58,8 +58,8 @@ func main() {
 	intermediate = time.Now()
 
 	// TRANSFORMATIONS**********************************************
-	// GetRunes(arr)
-	arr = transforms.XDoG(arr)
+	GetRunes(arr)
+	// arr = transforms.XDoG(arr)
 
 	// for i := range len(arr) {
 	// 	for j := range len(arr[0]) {
@@ -335,8 +335,5 @@ func GetRunes(arr [][]transforms.Pixel) {
 		9: '■',
 	}
 
-	/*
-		TRANSFORMATIONS.
-	*/
 	transforms.LuminFilter(arr, mapping)
 }
