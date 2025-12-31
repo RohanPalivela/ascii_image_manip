@@ -45,67 +45,66 @@ func blur(arr [][]Pixel, kernel_size int) [][]Pixel {
 	radius := kernel_size / 2
 
 	result := make([][]Pixel, len(arr))
+	tmp := make([][]Pixel, len(arr))
 
 	for i := range len(arr) {
 		result[i] = make([]Pixel, len(arr[i]))
+		tmp[i] = make([]Pixel, len(arr[i]))
 	}
 
-	// vertical pass
+	// horizontal pass
 	for i := range len(arr) {
 		for j := range len(arr[i]) {
 			var r, g, b, a float64 = 0, 0, 0, 0
 			for k := -radius; k <= radius; k++ {
-				if i+k < 0 || i+k > len(arr)-1 {
-					break
+				var pix Pixel
+				if j+k < 0 {
+					pix = arr[i][0]
+				} else if j+k > len(result[i])-1 {
+					pix = arr[i][len(result[i])-1]
+				} else {
+					pix = arr[i][j+k]
 				}
-				pix := arr[i+k][j]
-
 				weight := kernel[k+radius]
-
 				rc, rg, rb, ra := pix.R, pix.G, pix.B, pix.A
-
 				r += (float64(rc) * weight)
 				g += (float64(rg) * weight)
 				b += (float64(rb) * weight)
 				a += (float64(ra) * weight)
 			}
-
-			result[i][j] = Pixel{
+			tmp[i][j] = Pixel{
 				R:         uint8(r),
 				G:         uint8(g),
 				B:         uint8(b),
 				A:         uint8(a),
 				Character: arr[i][j].Character,
 			}
-
-			// fmt.Printf("New val: %v %v %v %v\n", uint8(r), uint8(g), uint8(b), uint8(a))
 		}
 	}
 
-	// horizontal pass
-	for i := range len(result) {
-		for j := range len(result[i]) {
+	// vertical pass
+	for i := range len(tmp) {
+		for j := range len(tmp[i]) {
 			var r, g, b, a float64 = 0, 0, 0, 0
 			for k := -radius; k <= radius; k++ {
-				if j+k < 0 || j+k > len(result[i])-1 {
-					break
+				var pix Pixel
+				if i+k < 0 {
+					pix = tmp[0][j]
+				} else if i+k > len(tmp)-1 {
+					pix = tmp[len(tmp)-1][j]
+				} else {
+					pix = tmp[i+k][j]
 				}
-				pix := result[i][j+k]
-
 				rc, rg, rb, ra := pix.R, pix.G, pix.B, pix.A
-
 				r += (float64(rc) * kernel[k+radius])
 				g += (float64(rg) * kernel[k+radius])
 				b += (float64(rb) * kernel[k+radius])
 				a += (float64(ra) * kernel[k+radius])
 			}
-
 			result[i][j].R = uint8(r)
 			result[i][j].G = uint8(g)
 			result[i][j].B = uint8(b)
 			result[i][j].A = uint8(a)
-
-			// fmt.Printf("New val: %v %v %v %v\n", uint8(r), uint8(g), uint8(b), uint8(a))
 		}
 	}
 

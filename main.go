@@ -57,8 +57,9 @@ func main() {
 	LogOut(fmt.Sprintf("LOGGING >> Took %s to make and propagate pixel info", time.Since(intermediate)))
 	intermediate = time.Now()
 
+	// TRANSFORMATIONS**********************************************
 	// GetRunes(arr)
-	arr = transforms.GaussianBlur1D(arr, 51)
+	arr = transforms.XDoG(arr)
 
 	// for i := range len(arr) {
 	// 	for j := range len(arr[0]) {
@@ -67,6 +68,7 @@ func main() {
 	// 	}
 	// 	fmt.Println()
 	// }
+	// TRANSFORMATIONS**********************************************
 
 	LogOut(fmt.Sprintf("LOGGING >> CHARACTER TRANSFORMATIONS DONE: %s", time.Since(intermediate)))
 	intermediate = time.Now()

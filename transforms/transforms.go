@@ -8,9 +8,13 @@ import (
 // TRANSFORM FILTERS
 // *****************
 
-func luminize(p *Pixel, mapping map[int]rune) rune {
+func Luminance(p *Pixel) float64 {
 	red, green, blue := p.R, p.G, p.B
-	luminance := float64(0.2126*float64(red)+0.7152*(float64(green))+0.0722*float64(blue)) / 255 // Luminance from 0-255
+	return float64(0.2126*float64(red) + 0.7152*(float64(green)) + 0.0722*float64(blue)) // Luminance from 0-255
+}
+
+func luminize(p *Pixel, mapping map[int]rune) rune {
+	luminance := Luminance(p) / 255
 
 	// fmt.Println(luminance)
 
