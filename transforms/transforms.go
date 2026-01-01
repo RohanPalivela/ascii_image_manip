@@ -16,11 +16,7 @@ func Luminance(p *Pixel) float64 {
 func luminize(p *Pixel, mapping map[int]rune) rune {
 	luminance := Luminance(p) / 255
 
-	// fmt.Println(luminance * 10)
-
 	lumBuckets := min(int(luminance*10), 9) // push into buckets of 0-9 (mapping)
-
-	// fmt.Printf("%c\n", mapping[lumBuckets])
 
 	return mapping[lumBuckets]
 }
@@ -31,13 +27,8 @@ func LuminFilter(arr [][]Pixel, mapping map[int]rune) {
 			cur := &arr[i][j]
 			run := luminize(cur, mapping)
 			cur.Character = run
-			// fmt.Printf("Character: %c, rgb: %s\n", cur.Character, cur.Color)
 		}
 	}
-}
-
-func SobelFilter() {
-
 }
 
 func Normalize(p *Pixel) color.RGBA {

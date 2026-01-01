@@ -18,13 +18,6 @@ func GaussianBlur2D(img [][]Pixel, kernel_size int) [][]Pixel {
 	blur1 := blur2D(img, kernel)
 
 	fmt.Printf("(%v, %v) \n", len(blur1), len(blur1[0]))
-	// for i := range len(blur1) {
-	// 	for j := range len(blur1[i]) {
-	// 		r, g, b, a := blur1[i][j].Color.RGBA()
-	// 		fmt.Printf("(%v, %v, %v, %v) ", r>>8, g>>8, b>>8, a>>8)
-	// 	}
-	// 	fmt.Println()
-	// }
 
 	return blur1
 }
@@ -55,10 +48,6 @@ func createKernel2D(matrix_size int) [][]float64 {
 			kernel[i][j] /= sum
 		}
 	}
-	// fmt.Println("kernel:")
-	// for i := range matrix_size {
-	// 	fmt.Println(kernel[i])
-	// }
 
 	return kernel
 }
@@ -97,16 +86,12 @@ func blur2D(img [][]Pixel, kernel [][]float64) [][]Pixel {
 
 			var r, g, b, a float64 = 0, 0, 0, 0
 
-			// fmt.Printf("Cur coord [%v][%v] -- Image width = %v\n", i, j, img_width)
-			// fmt.Printf("Going from [%v][%v] to [%v][%v] -- radius = %v\n", min_x_val, min_y_val, max_x_val, max_y_val, radius)
-
 			for p := min_y_val; p <= max_y_val; p++ {
 				for q := min_x_val; q <= max_x_val; q++ {
 					pix := img[i+p][j+q]
 
 					rc, rg, rb, ra := pix.R, pix.G, pix.B, pix.A
 
-					// fmt.Println((float64(rc) / raa))
 					r += (float64(rc) * kernel[p+radius][q+radius])
 					g += (float64(rg) * kernel[p+radius][q+radius])
 					b += (float64(rb) * kernel[p+radius][q+radius])
@@ -121,7 +106,6 @@ func blur2D(img [][]Pixel, kernel [][]float64) [][]Pixel {
 				A:         uint8(a),
 				Character: img[i][j].Character,
 			}
-			// fmt.Printf("New val: %v %v %v %v\n", uint8(r), uint8(g), uint8(b), uint8(a))
 		}
 	}
 

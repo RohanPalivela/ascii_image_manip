@@ -17,11 +17,18 @@ import (
 )
 
 func main() {
+	// CONSTANTS FOR PROGRAM
+	file_name := "portrait.jpg"
+	img_file := "Images/" + file_name
+
+	// IMPORTANT FOR IMAGE SIZES ************
+	// keeping these the same value yields an image of ~ same size
+	// for any image > 1920x1080, keep at 8x8, otherwise probably go down
+	sample_size := 16
+	px_size := 16
+
 	fmt.Println("** BEGINNING OPERATIONS **")
 	start := time.Now()
-
-	file_name := "1920.png"
-	img_file := "Images/" + file_name
 
 	var img image.Image
 	var bounds image.Rectangle
@@ -41,11 +48,6 @@ func main() {
 	width := bounds.Dx()
 	height := bounds.Dy()
 
-	// IMPORTANT FOR IMAGE SIZES ************
-	// keeping these the same value yields an image of ~ same size
-	sample_size := 8
-	px_size := 8
-
 	fmt.Printf("Info: Original Dimensions: %v x %v\n", width, height)
 
 	pix_width := width / sample_size
@@ -58,16 +60,10 @@ func main() {
 	intermediate = time.Now()
 
 	// TRANSFORMATIONS**********************************************
-	GetRunes(arr)
-	// arr = transforms.XDoG(arr)
+	// GetRunes(arr)
+	// arr = transforms.DoG(arr)
+	transforms.NaiveAsciiFilter(arr)
 
-	// for i := range len(arr) {
-	// 	for j := range len(arr[0]) {
-	// 		cur := arr[i][j]
-	// 		fmt.Printf("(%v, %v, %v, %v) ", cur.R, cur.G, cur.B, cur.A)
-	// 	}
-	// 	fmt.Println()
-	// }
 	// TRANSFORMATIONS**********************************************
 
 	LogOut(fmt.Sprintf("LOGGING >> CHARACTER TRANSFORMATIONS DONE: %s", time.Since(intermediate)))

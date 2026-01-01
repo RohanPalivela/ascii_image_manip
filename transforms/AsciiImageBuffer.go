@@ -33,9 +33,6 @@ func (buffer *AsciiImageBuffer) WriteRune(context *freetype.Context, c color.Col
 		return fmt.Errorf("draw string overflow, y height is %v", buffer.y)
 	}
 
-	// fmt.Println("Drawing " + (string(r)))
-	context.SetSrc(image.NewUniform(c))
-	// context.SetSrc(image.NewUniform(image.White)) // for no color
 	if r == 0 {
 		for i := buffer.x; i < buffer.x+buffer.letter_size; i++ {
 			// we draw from bottom left, so translate up one letter size
@@ -64,7 +61,6 @@ func (buffer *AsciiImageBuffer) WriteArray(context *freetype.Context, arr [][]Pi
 	for i := range len(arr) {
 		for j := range len(arr[i]) {
 			cur := &arr[i][j]
-			// fmt.Printf("Character: %c, rgb: %s\n", cur.Character, cur.Color)
 			if err := buffer.WriteRune(context, color.RGBA{cur.R, cur.G, cur.B, cur.A}, cur.Character); err != nil {
 				fmt.Println(err.Error())
 				break
