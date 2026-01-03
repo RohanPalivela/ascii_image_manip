@@ -44,6 +44,7 @@ func (buffer *AsciiImageBuffer) WriteRune(context *freetype.Context, c color.Col
 		return nil
 	}
 
+	// context.SetSrc(&image.Uniform{c})
 	_, err := context.DrawString(string(r), fixed.P(buffer.x, buffer.y))
 
 	if err != nil {

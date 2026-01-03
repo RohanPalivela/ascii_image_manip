@@ -24,8 +24,8 @@ func main() {
 	// IMPORTANT FOR IMAGE SIZES ************
 	// keeping these the same value yields an image of ~ same size
 	// for any image > 1920x1080, keep at 8x8, otherwise probably go down
-	sample_size := 16
-	px_size := 16
+	sample_size := 4
+	px_size := 4
 
 	fmt.Println("** BEGINNING OPERATIONS **")
 	start := time.Now()
@@ -61,8 +61,11 @@ func main() {
 
 	// TRANSFORMATIONS**********************************************
 	// GetRunes(arr)
+	// arr = transforms.XDoG(arr)
 	// arr = transforms.DoG(arr)
-	transforms.NaiveAsciiFilter(arr)
+	// transforms.AsciiFilter(arr)
+	// transforms.NaiveAsciiFilter(arr)
+	arr = transforms.SobelFilter(arr, false)
 
 	// TRANSFORMATIONS**********************************************
 

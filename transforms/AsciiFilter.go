@@ -16,7 +16,7 @@ func NaiveAsciiFilter(arr [][]Pixel) {
 
 	LuminFilter(arr, mapping)
 
-	sobel := SobelFilter(arr)
+	sobel := SobelFilter(arr, true)
 
 	for i := range len(sobel) {
 		for j := range len(sobel[i]) {
@@ -46,7 +46,7 @@ func AsciiFilter(arr [][]Pixel) {
 
 	edged := DoG(arr)
 
-	sobel := SobelFilter(edged)
+	sobel := SobelFilter(edged, true)
 
 	for i := range len(sobel) {
 		for j := range len(sobel[i]) {

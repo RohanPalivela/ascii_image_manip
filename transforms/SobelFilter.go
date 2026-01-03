@@ -4,7 +4,7 @@ import (
 	"math"
 )
 
-func SobelFilter(arr [][]Pixel) [][]Pixel {
+func SobelFilter(arr [][]Pixel, character bool) [][]Pixel {
 	result := make([][]Pixel, len(arr))
 
 	for i := range len(arr) {
@@ -22,6 +22,13 @@ func SobelFilter(arr [][]Pixel) [][]Pixel {
 		{-1, -2, -1},
 	}
 
+	var rune_insert rune
+	if character {
+		rune_insert = ' '
+	} else {
+		rune_insert = rune(0)
+	}
+
 	for i := 0; i < len(arr); i++ {
 		for j := 0; j < len(arr[i]); j++ {
 			if i == 0 || j == 0 || i == len(arr)-1 || j == len(arr[i])-1 {
@@ -30,7 +37,7 @@ func SobelFilter(arr [][]Pixel) [][]Pixel {
 					G:         0,
 					B:         0,
 					A:         255,
-					Character: ' ',
+					Character: rune_insert,
 				}
 				continue
 			}
@@ -47,6 +54,8 @@ func SobelFilter(arr [][]Pixel) [][]Pixel {
 			r := rune(0)
 
 			switch {
+			case !character:
+				r = rune_insert
 			case angle < math.Pi/8 || angle >= 7*math.Pi/8:
 				r = '|'
 			case angle < 3*math.Pi/8:
@@ -59,7 +68,7 @@ func SobelFilter(arr [][]Pixel) [][]Pixel {
 
 			end := uint8(min(255, math.Abs(x)+math.Abs(y)))
 
-			if !(end > 100) {
+			if character && !(end > 100) {
 				r = ' '
 			}
 
