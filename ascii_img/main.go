@@ -1,4 +1,4 @@
-package main
+package ascii_img
 
 import (
 	"fmt"
@@ -15,6 +15,48 @@ import (
 	transforms "github.com/RohanPalivela/ascii_image_manip/transforms"
 	"github.com/golang/freetype"
 )
+
+// Place your image/video into the "images/" directory. Provide the filename (ex: "hi.png" with no images/) into this function.
+func Initialize(filename string, sample_size int, px_size int) [][]transforms.Pixel {
+	// file_name := "portrait.jpg"
+	img_file := "Images/" + filename
+
+	fmt.Println("** BEGINNING OPERATIONS **")
+	start := time.Now()
+
+	var img image.Image
+	var bounds image.Rectangle
+
+	switch img_file[strings.Index(img_file, "."):] {
+	case ".png":
+		img, bounds = OpenPNGImg(img_file)
+	case ".jpeg", ".jpg":
+		img, bounds = OpenJPEGImg(img_file)
+	}
+
+	LogOut(fmt.Sprintf("LOGGING >> Took %s to open image", time.Since(start)))
+	intermediate := time.Now()
+
+	width := bounds.Dx()
+	height := bounds.Dy()
+
+	fmt.Printf("Info: Original Dimensions: %v x %v\n", width, height)
+
+	pix_width := width / sample_size
+	pix_height := height / sample_size
+	fmt.Printf("Info: Shrinking to: %v x %v\n\n", pix_width, pix_height)
+
+	arr := InitializeArray(img, sample_size, pix_height, pix_width)
+
+	LogOut(fmt.Sprintf("LOGGING >> Took %s to make and propagate pixel info", time.Since(intermediate)))
+	intermediate = time.Now()
+
+	return arr
+}
+
+func OutputImage(arr [][]transforms.Pixel) {
+
+}
 
 func main() {
 	// CONSTANTS FOR PROGRAM
