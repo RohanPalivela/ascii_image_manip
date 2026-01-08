@@ -64,7 +64,7 @@ func benchmark() {
 	// GetRunes(arr)
 	// arr = transforms.XDoG(arr)
 	// arr = transforms.DoG(arr, 1, 15)
-	transforms.AsciiFilter(arr)
+	transforms.AsciiFilter(arr, 1, 15)
 	// transforms.NaiveAsciiFilter(arr)
 	// arr = transforms.SobelFilter(arr, false)
 

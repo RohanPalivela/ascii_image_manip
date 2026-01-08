@@ -16,17 +16,14 @@ import (
 
 // Place your image (future: supporting video) into the "images/" directory. Provide the filename (ex: "hi.png" with no images/) into this function. A sample size N averages every NxN space, downscaling the image by Nx.
 func Initialize(filename string, sample_size int) [][]transforms.Pixel {
-	// file_name := "portrait.jpg"
-	img_file := "Images/" + filename
-
 	var img image.Image
 	var bounds image.Rectangle
 
-	switch img_file[strings.Index(img_file, "."):] {
+	switch filename[strings.Index(filename, "."):] {
 	case ".png":
-		img, bounds = OpenPNGImg(img_file)
+		img, bounds = OpenPNGImg(filename)
 	case ".jpeg", ".jpg":
-		img, bounds = OpenJPEGImg(img_file)
+		img, bounds = OpenJPEGImg(filename)
 	}
 
 	width := bounds.Dx()

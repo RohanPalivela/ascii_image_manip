@@ -58,7 +58,7 @@ func SobelFilterConc(arr [][]Pixel, result [][]Pixel, add_character bool, start 
 			case angle < 3*math.Pi/8:
 				r = '\\'
 			case angle < 5*math.Pi/8:
-				r = '_'
+				r = '-'
 			default:
 				r = '/'
 			}
