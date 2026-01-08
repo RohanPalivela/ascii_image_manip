@@ -1,7 +1,6 @@
 package ascii_img
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
@@ -33,11 +32,8 @@ func Initialize(filename string, sample_size int) [][]transforms.Pixel {
 	width := bounds.Dx()
 	height := bounds.Dy()
 
-	fmt.Printf("Info: Original Dimensions: %v x %v\n", width, height)
-
 	pix_width := width / sample_size
 	pix_height := height / sample_size
-	fmt.Printf("Info: Shrinking to: %v x %v\n\n", pix_width, pix_height)
 
 	arr := InitializeArray(img, sample_size, pix_height, pix_width)
 
@@ -51,8 +47,6 @@ func OutputImage(arr [][]transforms.Pixel, px_size int, color_image bool) *image
 	// BOUNDS FOR KEEPING THE IMAGE QUALITY PERFECT:
 	out_width := pix_width * px_size
 	out_height := pix_height * px_size
-
-	fmt.Printf("Output dims = %vx%v\n", out_width, out_height)
 
 	newimg := image.NewRGBA(image.Rect(0, 0, out_width, out_height))
 	draw.Draw(newimg, newimg.Bounds(), image.NewUniform(color.Black), image.Point{}, draw.Src)
@@ -100,8 +94,6 @@ func OpenPNGImg(filename string) (image image.Image, bounding image.Rectangle) {
 		log.Fatal("Error opening file: " + err.Error())
 	}
 
-	fmt.Println("Opened " + img.Name() + "\n")
-
 	defer img.Close()
 
 	m, err := png.Decode(img)
@@ -121,8 +113,6 @@ func OpenJPEGImg(filename string) (image image.Image, bounding image.Rectangle) 
 	if err != nil {
 		log.Fatal("Error opening file: " + err.Error())
 	}
-
-	fmt.Println("Opened " + img.Name() + "\n")
 
 	defer img.Close()
 
