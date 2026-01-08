@@ -44,7 +44,7 @@ func AsciiFilter(arr [][]Pixel) {
 
 	LuminFilter(arr, mapping)
 
-	edged := DoG(arr)
+	edged := DoG(arr, 1, 15)
 
 	sobel := SobelFilter(edged, true)
 

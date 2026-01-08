@@ -23,7 +23,7 @@ func InitializeBuffer(x int, y int, width int, height int, letter_size int, img 
 
 /* Writes rune to the Context provided. AsciiImageBuffer keeps track of the current position, does wrapping for you.
  */
-func (buffer *AsciiImageBuffer) WriteRune(context *freetype.Context, c color.Color, r rune) error {
+func (buffer *AsciiImageBuffer) WriteRune(context *freetype.Context, c color.Color, r rune, to_color bool) error {
 	if buffer.x >= buffer.width {
 		buffer.x = 0
 		buffer.y += buffer.letter_size
@@ -44,7 +44,10 @@ func (buffer *AsciiImageBuffer) WriteRune(context *freetype.Context, c color.Col
 		return nil
 	}
 
-	// context.SetSrc(&image.Uniform{c})
+	if to_color {
+		context.SetSrc(&image.Uniform{c})
+	}
+
 	_, err := context.DrawString(string(r), fixed.P(buffer.x, buffer.y))
 
 	if err != nil {
@@ -56,13 +59,13 @@ func (buffer *AsciiImageBuffer) WriteRune(context *freetype.Context, c color.Col
 	return nil
 }
 
-/* Writes array to the Context provided. AsciiImageBuffer keeps track of the current position, does wrapping for you.
+/* Writes array to the Context provided. AsciiImageBuffer keeps track of the current position, does wrapping for you. Provide true
  */
-func (buffer *AsciiImageBuffer) WriteArray(context *freetype.Context, arr [][]Pixel) {
+func (buffer *AsciiImageBuffer) WriteArray(context *freetype.Context, arr [][]Pixel, to_color bool) {
 	for i := range len(arr) {
 		for j := range len(arr[i]) {
 			cur := &arr[i][j]
-			if err := buffer.WriteRune(context, color.RGBA{cur.R, cur.G, cur.B, cur.A}, cur.Character); err != nil {
+			if err := buffer.WriteRune(context, color.RGBA{cur.R, cur.G, cur.B, cur.A}, cur.Character, to_color); err != nil {
 				fmt.Println(err.Error())
 				break
 			}

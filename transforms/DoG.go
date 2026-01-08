@@ -2,11 +2,23 @@ package transforms
 
 import (
 	"math"
+	"sync"
 )
 
-func DoG(img [][]Pixel) [][]Pixel {
-	blur1 := GaussianBlur1D(img, 5)
-	blur2 := GaussianBlur1D(img, 11)
+// blur_rad_1 < blur_rad_2
+func DoG(img [][]Pixel, blur_rad_1 int, blur_rad_2 int) [][]Pixel {
+	var group sync.WaitGroup
+	var blur1, blur2 [][]Pixel
+
+	group.Go(func() {
+		blur1 = GaussianBlur1D(img, blur_rad_1)
+	})
+
+	group.Go(func() {
+		blur2 = GaussianBlur1D(img, blur_rad_2)
+	})
+
+	group.Wait()
 
 	result := make([][]Pixel, len(blur1))
 	for i := range len(blur1) {
@@ -22,13 +34,7 @@ func DoG(img [][]Pixel) [][]Pixel {
 
 			finRes := max(0, math.Abs(pix1Lum-pix2Lum)) // 0-1 range
 
-			if finRes >= 0.04 {
-				finRes = 1
-			} else {
-				finRes = 0
-			}
-
-			pix_val := (uint8)(finRes * 255)
+			pix_val := min(255, 10+(uint8)(finRes*255))
 			result[i][j] = Pixel{
 				R: pix_val,
 				G: pix_val,

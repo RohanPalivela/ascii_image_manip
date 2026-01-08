@@ -10,19 +10,15 @@ import (
 	"log"
 	"os"
 	"strings"
-	"time"
 
 	transforms "github.com/RohanPalivela/ascii_image_manip/transforms"
 	"github.com/golang/freetype"
 )
 
-// Place your image/video into the "images/" directory. Provide the filename (ex: "hi.png" with no images/) into this function.
-func Initialize(filename string, sample_size int, px_size int) [][]transforms.Pixel {
+// Place your image (future: supporting video) into the "images/" directory. Provide the filename (ex: "hi.png" with no images/) into this function. A sample size N averages every NxN space, downscaling the image by Nx.
+func Initialize(filename string, sample_size int) [][]transforms.Pixel {
 	// file_name := "portrait.jpg"
 	img_file := "Images/" + filename
-
-	fmt.Println("** BEGINNING OPERATIONS **")
-	start := time.Now()
 
 	var img image.Image
 	var bounds image.Rectangle
@@ -34,9 +30,6 @@ func Initialize(filename string, sample_size int, px_size int) [][]transforms.Pi
 		img, bounds = OpenJPEGImg(img_file)
 	}
 
-	LogOut(fmt.Sprintf("LOGGING >> Took %s to open image", time.Since(start)))
-	intermediate := time.Now()
-
 	width := bounds.Dx()
 	height := bounds.Dy()
 
@@ -47,84 +40,19 @@ func Initialize(filename string, sample_size int, px_size int) [][]transforms.Pi
 	fmt.Printf("Info: Shrinking to: %v x %v\n\n", pix_width, pix_height)
 
 	arr := InitializeArray(img, sample_size, pix_height, pix_width)
-
-	LogOut(fmt.Sprintf("LOGGING >> Took %s to make and propagate pixel info", time.Since(intermediate)))
-	intermediate = time.Now()
 
 	return arr
 }
 
-func OutputImage(arr [][]transforms.Pixel) {
-
-}
-
-func main() {
-	// CONSTANTS FOR PROGRAM
-	file_name := "portrait.jpg"
-	img_file := "Images/" + file_name
-
-	// IMPORTANT FOR IMAGE SIZES ************
-	// keeping these the same value yields an image of ~ same size
-	// for any image > 1920x1080, keep at 8x8, otherwise probably go down
-	sample_size := 4
-	px_size := 4
-
-	fmt.Println("** BEGINNING OPERATIONS **")
-	start := time.Now()
-
-	var img image.Image
-	var bounds image.Rectangle
-
-	switch img_file[strings.Index(img_file, "."):] {
-	case ".png":
-		img, bounds = OpenPNGImg(img_file)
-	case ".jpeg", ".jpg":
-		img, bounds = OpenJPEGImg(img_file)
-	}
-
-	LogOut(fmt.Sprintf("LOGGING >> Took %s to open image", time.Since(start)))
-	intermediate := time.Now()
-
-	operations := time.Now()
-
-	width := bounds.Dx()
-	height := bounds.Dy()
-
-	fmt.Printf("Info: Original Dimensions: %v x %v\n", width, height)
-
-	pix_width := width / sample_size
-	pix_height := height / sample_size
-	fmt.Printf("Info: Shrinking to: %v x %v\n\n", pix_width, pix_height)
-
-	arr := InitializeArray(img, sample_size, pix_height, pix_width)
-
-	LogOut(fmt.Sprintf("LOGGING >> Took %s to make and propagate pixel info", time.Since(intermediate)))
-	intermediate = time.Now()
-
-	// TRANSFORMATIONS**********************************************
-	// GetRunes(arr)
-	// arr = transforms.XDoG(arr)
-	// arr = transforms.DoG(arr)
-	// transforms.AsciiFilter(arr)
-	transforms.NaiveAsciiFilter(arr)
-	// arr = transforms.SobelFilter(arr, false)
-
-	// for i := range len(arr) {
-	// 	for j := range len(arr[i]) {
-	// 		fmt.Printf("%v ", arr[i][j])
-	// 	}
-	// 	fmt.Println()
-	// }
-	// fmt.Println("DONE")
-
-	// TRANSFORMATIONS**********************************************
-
-	LogOut(fmt.Sprintf("LOGGING >> CHARACTER TRANSFORMATIONS DONE: %s", time.Since(intermediate)))
-	intermediate = time.Now()
+func OutputImage(arr [][]transforms.Pixel, px_size int, color_image bool) *image.RGBA {
+	pix_width := len(arr[0])
+	pix_height := len(arr)
 
 	// BOUNDS FOR KEEPING THE IMAGE QUALITY PERFECT:
 	out_width := pix_width * px_size
 	out_height := pix_height * px_size
+
+	fmt.Printf("Output dims = %vx%v\n", out_width, out_height)
 
 	newimg := image.NewRGBA(image.Rect(0, 0, out_width, out_height))
 	draw.Draw(newimg, newimg.Bounds(), image.NewUniform(color.Black), image.Point{}, draw.Src)
@@ -133,64 +61,21 @@ func main() {
 
 	buffer := transforms.InitializeBuffer(0, px_size, out_width, out_height, px_size, newimg)
 
-	LogOut(fmt.Sprintf("LOGGING >> Did pre-processing for image drawing (blank image, created image buffer, parsed font): %s", time.Since(intermediate)))
-	intermediate = time.Now()
+	buffer.WriteArray(context, arr, color_image)
 
-	buffer.WriteArray(context, arr)
-
-	LogOut(fmt.Sprintf("LOGGING >> Took %s to draw pixels in buffer", time.Since(intermediate)))
-	intermediate = time.Now()
-
-	op_end := time.Since(operations)
-
-	outFile, err := os.Create("out.png")
-	if err != nil {
-		log.Println(err)
-		os.Exit(1)
-	}
-
-	defer outFile.Close()
-
-	err = png.Encode(outFile, newimg)
-
-	if err != nil {
-		log.Println(err)
-		os.Exit(1)
-	}
-
-	LogOut(fmt.Sprintf("LOGGING >> Time to encode output image: %s", time.Since(intermediate)))
-
-	LogOut(fmt.Sprintf("LOGGING >> Total execution time: %s", time.Since(start)))
-	LogOut(fmt.Sprintf("LOGGING >> Took %s for non-(encode/decode) operations", op_end))
-	fmt.Println("Created new image")
-	intermediate = time.Now()
+	return newimg
 }
 
-// *****************
-// LOGGING FXNS
-// *****************
-func LogOut(message string) {
-	size := len(message)
-
-	var sb strings.Builder
-	for i := 0; i < size+4; i++ {
-		sb.WriteRune('*')
-	}
-	fmt.Println(sb.String())
-	fmt.Println("* " + message + " *")
-	fmt.Println(sb.String() + "\n")
-}
-
-func WriteToTXT(height int, width int, mapping map[int]rune, arr [][]transforms.Pixel) {
+func WriteToTXT(arr [][]transforms.Pixel) {
 	// .txt output
 	var sb strings.Builder
-	for i := range height {
-		for j := range width {
+	for i := range len(arr) {
+		for j := range len(arr[i]) {
 			cur := arr[i][j]
 			sb.WriteRune(cur.Character)
-			sb.WriteString(" ")
+			sb.WriteRune(' ')
 		}
-		sb.WriteString("\n")
+		sb.WriteRune('\n')
 	}
 
 	file, err := os.Create("output.txt")
@@ -310,7 +195,7 @@ func InitializeContext(newimg draw.Image, px_size float64) (cont *freetype.Conte
 	c.SetDPI(72)
 	c.SetFont(f)
 	c.SetFontSize(px_size)
-	c.SetClip(newimg.Bounds())
+	c.SetClip((newimg).Bounds())
 	c.SetDst(newimg)
 	c.SetSrc(image.White) // default value ig
 

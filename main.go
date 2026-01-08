@@ -16,16 +16,17 @@ import (
 	"github.com/golang/freetype"
 )
 
-func main() {
+// function that performs rudimentary time benchmarking
+func benchmark() {
 	// CONSTANTS FOR PROGRAM
-	file_name := "portrait.jpg"
+	file_name := "mountain.jpg"
 	img_file := "Images/" + file_name
 
 	// IMPORTANT FOR IMAGE SIZES ************
 	// keeping these the same value yields an image of ~ same size
 	// for any image > 1920x1080, keep at 8x8, otherwise probably go down
-	sample_size := 4
-	px_size := 4
+	sample_size := 8
+	px_size := 8
 
 	fmt.Println("** BEGINNING OPERATIONS **")
 	start := time.Now()
@@ -62,9 +63,9 @@ func main() {
 	// TRANSFORMATIONS**********************************************
 	// GetRunes(arr)
 	// arr = transforms.XDoG(arr)
-	// arr = transforms.DoG(arr)
-	// transforms.AsciiFilter(arr)
-	transforms.NaiveAsciiFilter(arr)
+	// arr = transforms.DoG(arr, 1, 15)
+	transforms.AsciiFilter(arr)
+	// transforms.NaiveAsciiFilter(arr)
 	// arr = transforms.SobelFilter(arr, false)
 
 	// for i := range len(arr) {
@@ -94,7 +95,7 @@ func main() {
 	LogOut(fmt.Sprintf("LOGGING >> Did pre-processing for image drawing (blank image, created image buffer, parsed font): %s", time.Since(intermediate)))
 	intermediate = time.Now()
 
-	buffer.WriteArray(context, arr)
+	buffer.WriteArray(context, arr, true)
 
 	LogOut(fmt.Sprintf("LOGGING >> Took %s to draw pixels in buffer", time.Since(intermediate)))
 	intermediate = time.Now()

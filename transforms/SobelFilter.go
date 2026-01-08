@@ -104,10 +104,10 @@ func SobelFilter(arr [][]Pixel, add_character bool) [][]Pixel {
 	divisions := 10 // 8 threads ? ish
 	var group sync.WaitGroup
 
-	incr := len(arr) / divisions
+	incr := len(arr[0]) / divisions
 
 	// vertical partitions
-	for i := 0; i < len(arr); i += incr {
+	for i := 0; i < len(arr[0]); i += incr {
 		start := CoordPair{
 			x: i,
 			y: 0,
