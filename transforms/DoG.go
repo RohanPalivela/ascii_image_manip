@@ -34,7 +34,7 @@ func DoG(img [][]Pixel, blur_rad_1 int, blur_rad_2 int) [][]Pixel {
 
 			finRes := max(0, math.Abs(pix1Lum-pix2Lum)) // 0-1 range
 
-			pix_val := min(255, 10+(uint8)(finRes*255))
+			pix_val := min(255, 15+(uint8)(finRes*255))
 			result[i][j] = Pixel{
 				R: pix_val,
 				G: pix_val,

@@ -66,7 +66,6 @@ func (buffer *AsciiImageBuffer) WriteArray(context *freetype.Context, arr [][]Pi
 		for j := range len(arr[i]) {
 			cur := &arr[i][j]
 			if err := buffer.WriteRune(context, color.RGBA{cur.R, cur.G, cur.B, cur.A}, cur.Character, to_color); err != nil {
-				fmt.Println(err.Error())
 				break
 			}
 		}
