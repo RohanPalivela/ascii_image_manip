@@ -7,8 +7,6 @@ A (somewhat) finished image->ascii CPU renderer. The implementation uses image p
 
 Done from scratch in GoLang as a learning experience. With more optimization it could be used in real time at 40-60fps (theoretically, based on rudimentary benchmarks in ```benchmark.go``` excluding encoding and decoding time). Heavy inspiration from Acerola's GPU implementation.
 
-**Duration**: 3 weeks
-
 **Features:**
 - Multiple individual filters in /transforms/ (difference of gaussians, sobel filter, xDoG, 1D separable and 2D gaussian blurs)
 - Dynamic image scaling
