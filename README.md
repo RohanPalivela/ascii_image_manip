@@ -14,7 +14,15 @@ Done from scratch in GoLang as a learning experience. With more optimization it 
 - Concurrency/parallelization in sobel filter
 - Supports jpeg/jpg/png
 
-**Unimplemented:**
-- [ ] Full concurrency into filters and initialization steps (to hopefully decrease runtime)
-- [ ] Video support
-- [ ] Realtime support 
+## Examples
+**Original**
+![Portrait from ascii_image_manip](https://github.com/user-attachments/assets/0d84b192-1f01-4bd1-80b9-0ccf1ead6669)
+
+**w/ color:**
+<img width="1952" height="2128" alt="asciicolor" src="https://github.com/user-attachments/assets/8ad3b92d-5f12-4add-b96f-c2ec06927f1b" />
+
+**w/o color:**
+<img width="1952" height="2128" alt="No Color Image" src="https://github.com/user-attachments/assets/77e21fc8-31d2-4f3c-bfe7-f4804ca5bd9e" />
+
+
+
